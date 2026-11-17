@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from rt.baselines import fire, ls_learner
 from rt.bayes import bayes_a, first_obs_var
@@ -59,14 +60,22 @@ def _normal_logpdf(z, var):
     return -0.5 * np.log(2 * np.pi * var) - 0.5 * z * z / var
 
 
+def _trapezoid_weights(g):
+    w = np.ones(g)
+    if g > 1:
+        w[0] = w[-1] = 0.5
+    return w
+
+
 def _reference_bayes(xi, t, window, rhos):
-    """Brute force for one sequence: explicit per-observation Gaussian log-densities."""
+    """Brute force for one sequence: explicit per-observation Gaussian log-densities,
+    trapezoid prior weights on the grid (the quadrature of a continuous uniform prior)."""
     s = 1 if window is None else max(1, t - window + 1)
     v = np.array([sum(r ** (2 * k) for k in range(s)) for r in rhos])
     ll = _normal_logpdf(xi[s], v)
     for j in range(s + 1, t + 1):
         ll = ll + _normal_logpdf(xi[j] - rhos * xi[j - 1], 1.0)
-    w = np.exp(ll - ll.max())
+    w = np.exp(ll - ll.max()) * _trapezoid_weights(len(rhos))
     w /= w.sum()
     return np.array([(w * rhos ** h).sum() * xi[t] for h in range(1, 7)])
 
@@ -82,6 +91,37 @@ def test_bayes_matches_brute_force_reference():
             for t in (1, 2, 3, 5, 17, 40, 80):
                 ref = _reference_bayes(b.x[i], t, window, rhos)
                 assert np.allclose(F[i, t], ref, rtol=1e-10, atol=1e-12), (window, i, t)
+
+
+def _continuous_prior_reference(xi, t, window, n_quad=200_001):
+    """E[rho^h | data] x_t under a continuous U[0, 1] prior, by trapezoid quadrature on a
+    grid 100x finer than the default; independent of rt.bayes (vectorised direct sums)."""
+    r = np.linspace(0.0, 1.0, n_quad)
+    s = 1 if window is None else max(1, t - window + 1)
+    v = (r[:, None] ** (2.0 * np.arange(s))).sum(1)
+    ll = _normal_logpdf(xi[s], v)
+    for j in range(s + 1, t + 1):
+        ll = ll + _normal_logpdf(xi[j] - r * xi[j - 1], 1.0)
+    w = np.exp(ll - ll.max())
+    den = np.trapezoid(w, r)
+    return np.array([np.trapezoid(w * r ** h, r) / den * xi[t] for h in range(1, 7)])
+
+
+def test_default_grid_matches_continuous_uniform_prior():
+    paths = np.concatenate([sample_family_a(2, np.random.default_rng(10 + k), rho=rho).x
+                            for k, rho in enumerate((0.0, 0.5, 1.0))])
+    for window in (None, 3, 10):
+        F = bayes_a(paths, window)
+        for i in range(len(paths)):
+            for t in (1, 2, 9, 40, 80):
+                ref = _continuous_prior_reference(paths[i], t, window)
+                assert np.allclose(F[i, t], ref, rtol=1e-5, atol=0), (window, i, t)
+
+
+@pytest.mark.parametrize("prior", [(-0.1, 1.0), (0.0, 1.1), (0.6, 0.4)])
+def test_prior_outside_unit_interval_is_rejected(prior):
+    with pytest.raises(ValueError):
+        bayes_a(np.zeros((1, 87)), None, grid=5, prior=prior)
 
 
 def test_ls_learner_matches_polyfit():
