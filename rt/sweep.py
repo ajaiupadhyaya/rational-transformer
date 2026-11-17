@@ -34,7 +34,7 @@ from typing import Callable
 
 import pandas as pd
 
-from rt.gate import ROOT, code_hash
+from rt.gate import ROOT, code_hash, warn_env
 from rt.train import Cell, load_cfg, train_cell
 
 FAMILY_B_SIZE = "l"
@@ -193,6 +193,7 @@ def main(argv=None, *, root=None, cfg=None, run_cell=None, clock=time.monotonic)
     ap.add_argument("--cell", default=None)
     ap.add_argument("--steps", type=int, default=None)
     args = ap.parse_args(argv)
+    warn_env()
 
     if args.time_only:
         if not args.cell or not args.steps:

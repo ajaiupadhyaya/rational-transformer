@@ -6,8 +6,10 @@ x[:, 0] (Family A: the constant 0; Family B: the hidden mean) is never an input.
 Values are fed raw, without normalisation, because the benchmark sees raw values.
 
 Architecture options come from the config keys "head" ("linear" | "affine") and "inputs"
-("raw" | "raw+asinh"), see rt/model.py; the defaults are the affine head with raw+asinh inputs (the original network. They are
-saved with every checkpoint and evaluation rebuilds the model from them.
+("raw" | "raw+asinh"), see rt/model.py. configs/grid.json is the source of the current
+default (affine, raw+asinh). The options are saved with every checkpoint and evaluation
+rebuilds the model from them; a checkpoint config that lacks the keys predates them and
+was the original network, so it rebuilds as LEGACY_MODEL (linear, raw).
 
 Usage: uv run python -m rt.train --cell A-s-wfull-s0 --device mps [--max-steps N]
          [--head linear|affine] [--inputs raw|raw+asinh] [--out DIR]
@@ -39,7 +41,7 @@ TRAIN_SEED_TAG = 0xA11CE      # keeps training streams apart from eval seeds (10
 TRAJECTORY_KEYS = ("sizes", "t_max", "horizons", "lr", "weight_decay", "betas",
                    "warmup_steps", "batch_size", "max_steps", "head", "inputs")
 # architecture keys a config written before they existed implicitly had
-MODEL_DEFAULTS = {"head": "affine", "inputs": "raw+asinh"}
+LEGACY_MODEL = {"head": "linear", "inputs": "raw"}   # what a config without the keys was
 LOG_COLUMNS = ["step", "loss", "lr", "seconds"]
 _ID_RE = re.compile(r"^(A|B)-([a-z]+)-w(full|\d+)-s(\d+)$")
 
@@ -84,8 +86,8 @@ def load_cfg(**overrides) -> dict:
 
 def build_model(cfg: dict, size: str) -> Forecaster:
     """The Forecaster a config describes (a config without "head"/"inputs" -> defaults)."""
-    return Forecaster(*cfg["sizes"][size], head=cfg.get("head", MODEL_DEFAULTS["head"]),
-                      inputs=cfg.get("inputs", MODEL_DEFAULTS["inputs"]))
+    return Forecaster(*cfg["sizes"][size], head=cfg.get("head", LEGACY_MODEL["head"]),
+                      inputs=cfg.get("inputs", LEGACY_MODEL["inputs"]))
 
 
 # ---- data -------------------------------------------------------------------
@@ -199,8 +201,8 @@ def train_cell(cell: Cell, cfg: dict, out_dir, device: str) -> Path:
         latest = max(existing)
         ck = torch.load(existing[latest], map_location=dev, weights_only=True)
         changed = [k for k in TRAJECTORY_KEYS
-                   if ck["config"].get(k, MODEL_DEFAULTS.get(k))
-                   != cfg.get(k, MODEL_DEFAULTS.get(k))]
+                   if ck["config"].get(k, LEGACY_MODEL.get(k))
+                   != cfg.get(k, LEGACY_MODEL.get(k))]
         if changed:
             raise ValueError(f"{out}: checkpoint step{latest}.pt was trained with different "
                              f"{changed}; use a fresh output directory")

@@ -63,7 +63,27 @@ def code_hash(root=None) -> str:
     for p in files:
         h.update(p.relative_to(root).as_posix().encode() + b"\0")
         h.update(p.read_bytes() + b"\0")
+    # The effective environment: a config or evaluation cache redirected through
+    # RT_CONFIG / RT_EVAL_DIR must not inherit a gate passed without it.
+    cfg_env = os.environ.get("RT_CONFIG")
+    if cfg_env:
+        cfg_path = Path(cfg_env).resolve()
+        if cfg_path not in {p.resolve() for p in root.glob("configs/*.json")}:
+            h.update(b"RT_CONFIG\0" + str(cfg_path).encode() + b"\0")
+            h.update((cfg_path.read_bytes() if cfg_path.exists() else b"<missing>") + b"\0")
+    eval_env = os.environ.get("RT_EVAL_DIR")
+    if eval_env:
+        h.update(b"RT_EVAL_DIR\0" + str(Path(eval_env).resolve()).encode() + b"\0")
     return h.hexdigest()
+
+
+def warn_env() -> None:
+    """One stderr line per redirecting environment variable that is set."""
+    for var in ("RT_CONFIG", "RT_EVAL_DIR"):
+        if os.environ.get(var):
+            print(f"WARNING: {var}={os.environ[var]} is set; it redirects the "
+                  f"{'config' if var == 'RT_CONFIG' else 'evaluation cache'} and is part of "
+                  f"the code hash", file=sys.stderr)
 
 
 def _std(batch, x, *Fs):
@@ -174,8 +194,14 @@ def _check_learning(root: Path, current_hash: str, log) -> dict:
     try:
         ev = json.loads(path.read_text())
         excess, ev_hash = float(ev["excess_mse_pct"]), ev["code_hash"]
+        ev_cell, ev_step = ev["cell"], ev["step"]
     except (OSError, ValueError, KeyError, TypeError):
         msg = f"missing or unreadable {path}; produce it with: {LEARN_CMD}"
+        log("  " + msg)
+        return {"passed": False, "message": msg}
+    if ev_cell != LEARNING_CELL or ev_step != LEARNING_STEP:
+        msg = (f"{path} is for {ev_cell} step {ev_step}, not {LEARNING_CELL} step "
+               f"{LEARNING_STEP}; re-run: {LEARN_CMD}")
         log("  " + msg)
         return {"passed": False, "message": msg}
     if ev_hash != current_hash:
@@ -292,6 +318,7 @@ def main(argv=None) -> int:
                     help="run the local learning check and record it against the current code")
     ap.add_argument("--device", default="mps", help="device for --learn (cpu, mps or cuda)")
     args = ap.parse_args(argv)
+    warn_env()
     if args.learn:
         return learn(args.device)
     result = run_gate()

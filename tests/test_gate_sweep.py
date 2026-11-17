@@ -64,6 +64,60 @@ def test_code_hash_changes_when_config_changes(tmp_path):
     assert code_hash(root) == code_hash(root)
 
 
+def test_code_hash_covers_rt_config(tmp_path, monkeypatch):
+    root = make_root(tmp_path / "r", gate=None) if (tmp_path / "r").mkdir() is None else None
+    monkeypatch.delenv("RT_CONFIG", raising=False)
+    base = code_hash(root)
+    monkeypatch.setenv("RT_CONFIG", str(root / "configs" / "grid.json"))     # the default file
+    assert code_hash(root) == base
+    other1, other2 = tmp_path / "o1.json", tmp_path / "o2.json"
+    other1.write_text('{"k": 1}\n')                                          # same bytes, new path
+    other2.write_text('{"k": 99}\n')
+    monkeypatch.setenv("RT_CONFIG", str(other1))
+    h1 = code_hash(root)
+    monkeypatch.setenv("RT_CONFIG", str(other2))
+    h2 = code_hash(root)
+    assert len({base, h1, h2}) == 3
+    monkeypatch.delenv("RT_CONFIG")
+    assert code_hash(root) == base
+
+
+def test_code_hash_covers_rt_eval_dir(tmp_path, monkeypatch):
+    root = make_root(tmp_path / "r", gate=None) if (tmp_path / "r").mkdir() is None else None
+    monkeypatch.delenv("RT_EVAL_DIR", raising=False)
+    base = code_hash(root)
+    monkeypatch.setenv("RT_EVAL_DIR", str(tmp_path / "cache"))
+    assert code_hash(root) != base
+
+
+def test_sweep_refuses_when_rt_config_differs_from_the_gated_environment(tmp_path, monkeypatch):
+    monkeypatch.delenv("RT_CONFIG", raising=False)
+    root = make_root(tmp_path, gate="green")                   # gate passed without RT_CONFIG
+    other = tmp_path.parent / (tmp_path.name + "-other.json")
+    other.write_text("{}")
+    monkeypatch.setenv("RT_CONFIG", str(other))
+    with pytest.raises(SystemExit):
+        main(["--dry-run"], root=root, cfg=small_cfg())
+
+
+def test_warn_env_names_variable_and_value(monkeypatch, capsys):
+    monkeypatch.setenv("RT_CONFIG", "/x/y.json")
+    monkeypatch.delenv("RT_EVAL_DIR", raising=False)
+    gate.warn_env()
+    err = capsys.readouterr().err
+    assert err.count("\n") == 1 and "RT_CONFIG=/x/y.json" in err
+    monkeypatch.delenv("RT_CONFIG")
+    gate.warn_env()
+    assert capsys.readouterr().err == ""
+
+
+def test_learning_check_requires_the_right_cell_and_step(tmp_path):
+    _learning_json(tmp_path, cell="B-l-wfull-s0")
+    assert not _check_learning(tmp_path, "h1", lambda *_: None)["passed"]
+    _learning_json(tmp_path, step=1000)
+    assert not _check_learning(tmp_path, "h1", lambda *_: None)["passed"]
+
+
 def test_code_hash_default_is_independent_of_cwd(tmp_path, monkeypatch):
     h = code_hash()
     monkeypatch.chdir(tmp_path)
