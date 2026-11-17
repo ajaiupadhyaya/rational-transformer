@@ -15,7 +15,7 @@
   "batch_size": 1024,
   "max_steps": 30000,
   "loss": "squared error summed over horizons; full window: mean over all 80 positions; window W: last position only",
-  "checkpoints": [100, 300, 1000, 3000, 10000, 30000],
+  "checkpoints": [3000, 10000, 30000],
   "log_every": 50,
   "eval_n_per_rho": 20000,
   "eval_n_prior": 100000,

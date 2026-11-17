@@ -129,7 +129,7 @@ def test_config_holds_the_brief_values():
     assert {k: tuple(v) for k, v in cfg["sizes"].items()} == SIZES
     assert cfg["lr"] == 1e-3 and cfg["warmup_steps"] == 500
     assert cfg["batch_size"] == 1024 and cfg["max_steps"] == 30_000
-    assert cfg["checkpoints"] == [100, 300, 1000, 3000, 10000, 30000]
+    assert cfg["checkpoints"] == [3000, 10000, 30000]
     assert cfg["windows"] == [2, 4, 8, 16, None] and cfg["seeds"] == [0, 1, 2, 3, 4]
     assert cfg["eval_n_per_rho"] == 20000 and cfg["eval_n_prior"] == 100000
     assert cfg["convergence"]["rel_tol"] == 0.001

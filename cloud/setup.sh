@@ -5,6 +5,8 @@
 set -euo pipefail
 cd "$HOME/rational-transformer"
 unset RT_CONFIG RT_EVAL_DIR
+# deviation prereg-v1.1: TF32 matmuls and one CPU thread per process on the cloud GPU
+export TORCH_ALLOW_TF32_CUBLAS_OVERRIDE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
 if ! command -v uv >/dev/null; then
   curl -LsSf https://astral.sh/uv/install.sh | sh
 fi

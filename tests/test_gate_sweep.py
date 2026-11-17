@@ -129,7 +129,7 @@ def test_resume_skips_complete_and_redoes_partial(tmp_path):
     cells = grid(cfg)
     all_steps = cfg["checkpoints"]
     write_metrics(root, cells[0], all_steps)                  # complete
-    write_metrics(root, cells[1], all_steps[:3])              # 3 of 6 checkpoints
+    write_metrics(root, cells[1], all_steps[:-1])             # all but the last checkpoint
     (root / "results" / "metrics" / f"{cells[1].id}.csv.tmp").write_text("stray")
     (root / "results" / "metrics" / f"{cells[2].id}.csv.tmp").write_text("only a tmp file")
     assert is_complete(cells[0], cfg, root / "results" / "metrics")

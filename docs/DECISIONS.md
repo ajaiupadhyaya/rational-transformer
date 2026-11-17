@@ -229,3 +229,26 @@ cache for both families and all windows (70 files, 8 GB) was then built on the M
 Projection for the configured grid on this GPU, even with TF32 and xs/s moved to the Mac: about
 57 GPU-hours (size l ~49 h, size m ~8 h), against ~28-34 h that $12 buys. Over the cap: per
 PREREG section 10 the sweep does not start; the owner decides.
+
+## 2026-11-17: deviation prereg-v1.1, Plan A (budget), decided before any confirmatory run
+
+The pilot projected the configured grid at ~57 GPU-hours, over the $12 sweep cap. Per PREREG
+section 10 the owner decided. Owner chose "Plan A" on 2026-11-17. No sweep result existed.
+
+1. **Checkpoints `[3000, 10000, 30000]`** instead of `[100, 300, 1000, 3000, 10000, 30000]`
+   (`configs/grid.json`). Saving a checkpoint does not change training (per-step RNG seeds), so
+   the step-30,000 models are the same; only the exploratory training-time traces lose their
+   three earliest points. The convergence column still compares steps 10,000 and 30,000.
+   Changes the code hash: gate re-run on the Mac 2026-11-17, PASS at `a2682c12…` (learning check 0.719%, identical); tagged `prereg-v1.1`.
+2. **Cloud runs use TF32 matrix multiplies and one CPU thread per process**, set by
+   environment (`TORCH_ALLOW_TF32_CUBLAS_OVERRIDE=1`, `OMP_NUM_THREADS=1`), not code. The
+   instance gate (learning check) runs under the same settings. Mac runs (mps) are unaffected.
+3. **Sizes `xs` and `s` train on the Mac** (PREREG section 10, first step).
+4. **Size `m`: seeds 0, 1, 2** (PREREG section 10, second step); verdicts use t with 2 df.
+5. **Family B (descriptive only): windows full and 4, seeds 0, 1, 2.** The overlay shows these
+   two windows; the other Family B cells are not run and are reported as not run.
+6. **Size `l`, Family A (every hypothesis) is not cut** and runs first.
+
+Cloud order: A-l (25 cells), then A-m seeds 0-2 (15), then B-l full and w4 seeds 0-2 (6). Budget
+guard $11 for the sweep, leaving room under the $15 cap (pilot ~$0.71) for the training-length
+re-checks of section 6.
