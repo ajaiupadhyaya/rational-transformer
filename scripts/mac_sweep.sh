@@ -12,7 +12,7 @@ for glob in 'A-xs-*' 'A-s-*'; do
   while [ "$(remaining "$glob")" -gt 0 ]; do
     if ! on_ac; then echo "$(date -u +%FT%TZ) on battery, waiting" >> $LOG; sleep 120; continue; fi
     echo "$(date -u +%FT%TZ) start $glob" >> $LOG
-    nice -n 15 uv run python -m rt.sweep --device mps --only "$glob" --jobs 2 >> $LOG 2>&1 &
+    nice -n 15 uv run python -m rt.sweep --device mps --only "$glob" --jobs 2 --budget-usd 1 --price-per-hour 0 >> $LOG 2>&1 &
     pid=$!
     while kill -0 $pid 2>/dev/null; do
       if ! on_ac; then
@@ -22,7 +22,8 @@ for glob in 'A-xs-*' 'A-s-*'; do
       fi
       sleep 30
     done
-    wait $pid 2>/dev/null
+    wait $pid 2>/dev/null; rc=$?
+    [ $rc -ne 0 ] && { echo "$(date -u +%FT%TZ) sweep exited $rc; pausing 10 min" >> $LOG; sleep 600; }
   done
 done
 echo "$(date -u +%FT%TZ) MAC SWEEP DONE" >> $LOG
