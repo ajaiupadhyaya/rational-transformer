@@ -3,20 +3,8 @@ import pytest
 
 from rt.baselines import fire, ls_learner
 from rt.bayes import bayes_a, first_obs_var
-from rt.sim import T_EVAL, sample_family_a
-
-
-def _eor_slope(F, x, h):
-    """OLS slope (with intercept), pooled over t in T_EVAL, of the forecast error
-    x[t+h] - F[t, h-1] on the revision F[t, h-1] - F[t-1, h].
-
-    Local stand-in for `eor_b`, which lands in Task 4.
-    """
-    t = np.array(T_EVAL)
-    err = (x[:, t + h] - F[:, t, h - 1]).ravel()
-    rev = (F[:, t, h - 1] - F[:, t - 1, h]).ravel()
-    rc = rev - rev.mean()
-    return (rc * (err - err.mean())).sum() / (rc * rc).sum()
+from rt.diagnostics import eor_b
+from rt.sim import sample_family_a
 
 
 def test_first_obs_var_at_one():
@@ -33,7 +21,7 @@ def test_point_prior_equals_fire():
 def test_bayes_error_orthogonal_to_revision_under_prior():
     b = sample_family_a(100_000, np.random.default_rng(1))       # rho from prior
     F = bayes_a(b.x, None)
-    assert abs(_eor_slope(F, b.x, h=1)) < 0.01
+    assert abs(eor_b(F, b.x, h=1)) < 0.01
 
 
 def test_bayes_beats_ls_and_window_is_no_better_than_full():

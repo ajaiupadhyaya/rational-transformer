@@ -4,20 +4,8 @@ import numpy as np
 
 from rt.baselines import ls_learner
 from rt.bayes import bayes_b
-from rt.sim import B_PRIOR, T_EVAL, sample_family_b
-
-
-def _eor_slope(F, x, h):
-    """OLS slope (with intercept), pooled over t in T_EVAL, of the forecast error
-    x[t+h] - F[t, h-1] on the revision F[t, h-1] - F[t-1, h].
-
-    Local stand-in for `eor_b`, which lands in Task 4 (copied from tests/test_bayes_a.py).
-    """
-    t = np.array(T_EVAL)
-    err = (x[:, t + h] - F[:, t, h - 1]).ravel()
-    rev = (F[:, t, h - 1] - F[:, t - 1, h]).ravel()
-    rc = rev - rev.mean()
-    return (rc * (err - err.mean())).sum() / (rc * rc).sum()
+from rt.diagnostics import eor_b
+from rt.sim import B_PRIOR, sample_family_b
 
 
 # --- brute-force reference: explicit 3-D grid over (rho, mu, sigma), no conjugacy -----
@@ -126,7 +114,7 @@ def _direct_conjugate(xi, t, window, rhos, h_max=6):
 
 def test_b_error_orthogonal_to_revision_under_prior():
     b = sample_family_b(100_000, np.random.default_rng(0))
-    assert abs(_eor_slope(bayes_b(b.x, None), b.x, 1)) < 0.01
+    assert abs(eor_b(bayes_b(b.x, None), b.x, 1)) < 0.01
 
 
 def test_b_beats_ls_with_intercept_and_window():
