@@ -25,3 +25,13 @@ def test_family_b_centres_on_mu():
     b = sample_family_b(200_000, np.random.default_rng(3), rho=0.0)
     assert abs(np.mean(b.x[:, 40] - b.mu)) < 0.02
     assert abs(np.mean(b.sigma**2) - 1.0) < 0.05   # InvGamma(3,2) mean = 1
+
+
+def test_family_b_mu_prior_scale():
+    # mu / sigma ~ N(0, k) exactly, with k = 25 (light-tailed, unlike mu itself, whose
+    # variance 25 E[sigma^2] is a mixture over an inverse-gamma with shape 3).
+    b = sample_family_b(400_000, np.random.default_rng(4), T=1)
+    z = b.mu / b.sigma
+    # sd of the sample variance is 25 * sqrt(2 / 400_000) ~= 0.056; tolerance ~5 sd.
+    assert abs(z.var() - 25.0) < 0.3
+    assert abs(z.mean()) < 0.05      # sd of the mean is 5 / sqrt(400_000) ~= 0.008
