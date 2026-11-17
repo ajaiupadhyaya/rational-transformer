@@ -181,3 +181,20 @@ Step 3000, h = 1, bench bayes:
 | 0.8   | -0.0064 | 1.015          |
 | 1.0   | -0.0029 | 1.410          |
 | prior | -0.0006 | 0.719          |
+
+## 2026-11-17: owner sign-off of the pre-registration
+
+The owner signed off `docs/PREREG.md` with these decisions (PREREG, "Owner decisions"):
+
+- The plateau rule (evaluation error at step 30,000 within 0.1% of step 10,000) no longer
+  overrides verdicts. It cannot separate under-training from bias under a learning rate that
+  decays to zero. It stays as a printed column. Every primary "different" verdict (H1, H2) and
+  every adjusted-positive H3 combination is re-trained at 60,000 steps and counts only if it
+  survives; if the budget does not cover the re-training it is reported as "not tested for
+  training length".
+- H3 uses a Bonferroni adjustment over the eight primary cell-rho combinations.
+- The mismatched-prior and mid-sequence-break arms are dropped.
+- Analysis code lives in `analysis/`, outside the gated `rt/` and `configs/`.
+- Margins two-sided as coded; budget rule never cuts size `l`.
+
+Not yet done at this entry: the gate re-run (the laptop was on battery) and the `prereg-v1` tag.

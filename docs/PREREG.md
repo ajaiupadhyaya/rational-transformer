@@ -1,64 +1,45 @@
 # The Rational Transformer: pre-registration
 
-Status: **draft for the owner's sign-off.** It binds when the commit that holds it is tagged
-`prereg-v1`. Authority: the design (`docs/superpowers/specs/2026-11-16-rational-transformer-design.md`)
-for the question, hypotheses, margins and benchmarks; the code under `rt/` and
-`configs/grid.json` for everything that is computed. Where the two differ, the difference is
-listed in the first section, not resolved silently.
+Status: **signed off by the owner on 2026-11-17.** It binds when the commit that holds it is
+tagged `prereg-v1`. Authority: the design
+(`docs/superpowers/specs/2026-11-16-rational-transformer-design.md`) for the question,
+hypotheses, margins and benchmarks; the code under `rt/` and `configs/grid.json` for everything
+that is computed. Where the two differ, the difference is listed in the first section, not
+resolved silently.
 
-## Open points for the owner
+## Owner decisions (2026-11-17)
 
-These need a decision, or an action, before the tag.
+The draft listed seven open points. The owner approved the following on 2026-11-17, before any
+confirmatory run existed. The sections below are written to these decisions.
 
-1. **The gate is stale at the current code.** `results/gate.json` and
-   `results/gate/learning.json` certify code hash `5b028b39…`. Commit `2c41231` (code hash
-   covers the effective config; legacy model defaults) changed `rt/gate.py`, `rt/sweep.py` and
-   `rt/train.py`, and the current hash is `ecb0d185…`. The sweep launcher will refuse to run
-   until `uv run python -m rt.gate --learn --device mps` (about 11 minutes) and
-   `uv run python -m rt.gate` are re-run. The re-run learning check trains the same cell
-   (A-s-wfull-s0, 3,000 steps) again; its numbers are one more pre-freeze exposure and should
-   be logged in `docs/DECISIONS.md` and added to section 9 **before** the tag, so that the tag
-   binds code that has a green gate.
-2. **The convergence rule needs three decisions.**
-   (a) The design says a cell is "not converged" if its *training loss* has not plateaued; the
-   code (`rt/evaluate.py`, `evaluate_all`) uses the model's *evaluation* squared error on the
-   prior set at h = 1, step 30,000 against step 10,000, relative tolerance 0.1%. This document
-   follows the code.
-   (b) The code decides convergence per run (one seed). Nothing in the code says how five
-   seeds make a converged *cell*. Section 6 proposes: a cell is converged only if all five of
-   its runs are.
-   (c) Risk: under a cosine schedule that decays to zero at 30,000, error can still fall by more
-   than 0.1% between 10,000 and 30,000 while the model is already inside the 1% equivalence
-   margin (the size-`s` probe fell from 1.42% to 0.72% excess between steps 1,000 and 3,000).
-   If that happens in the primary cells, H1 and H2 would be reported "not converged" although
-   the numbers sit inside the margin. If the owner wants a looser or different rule, it has to
-   change before the tag. Under the rule as written, "not converged" overrides every verdict.
-3. **The excess-error margin is two-sided in the code.** The design says "excess error under
-   1%". `rt.diagnostics.verdict` requires the whole interval inside (−1, +1), so a model that
-   *beats* the benchmark at a fixed rho by more than 1% (possible by leaning toward that rho,
-   at a cost elsewhere under the prior) is not "equivalent". This document follows the code,
-   which matches the meaning of "equivalent to the benchmark". Confirm.
-4. **The budget rule here differs from the design's text.** The design says: if the projection
-   exceeds the cap, "cut seeds or the largest size first". The rule given for this document
-   (section 10) moves sizes `xs` and `s` to the laptop first, then cuts size-`m` seeds from 5 to
-   3, and never cuts size `l`, which is primary for H1–H3. This document follows the second rule.
-   Confirm, and say what happens if even that does not fit (section 10 proposes: no sweep, owner
-   decides).
-5. **The H3 multiplicity rule in section 7 is a proposal** (Bonferroni across the eight primary
-   cell-rho combinations). It needs approval.
-6. **Code that does not exist yet.** (a) The analysis that turns `results/metrics/*.csv` into
-   the verdicts of sections 6–7 is not written (`rt.diagnostics.verdict` exists; the selection,
-   convergence aggregation and H3 rule do not). (b) The full-information rational and
-   least-squares forecasts are implemented (`rt.baselines`) but are not rows of the metrics CSV;
-   nothing reports them yet. (c) The mismatched-prior and mid-sequence-break arms have no code or
-   config. (d) The AKLMT human curve and the SPF comparison have not been copied from EWH.
-   Anything added under `rt/` or `configs/` changes the code hash and re-opens the gate; the
-   analysis and the descriptive arms should therefore live outside `rt/` (for example in
-   `analysis/`), or be written and gated before the tag. Either way, the analysis must
-   implement sections 6–7 exactly as written here.
-7. **Family B priors and AKLMT.** The design asks for Family B priors "set to cover AKLMT's
-   design". `docs/DECISIONS.md` fixes them (section 2) but does not record a check against
-   AKLMT's mean and noise ranges. This affects only the descriptive overlay.
+1. **Gate.** The gate must be green at the tagged code. `results/gate.json` and
+   `results/gate/learning.json` certified code hash `5b028b39…`; commit `2c41231` changed
+   `rt/gate.py`, `rt/sweep.py` and `rt/train.py`. The learning check and the gate are re-run
+   before the tag, and the re-run's numbers are added to section 9 and `docs/DECISIONS.md` as
+   one more pre-freeze exposure.
+2. **Convergence: a training-length check replaces the plateau override.** The design asks that
+   an under-trained cell never be reported as bias. The plateau rule in the code (evaluation
+   error at step 30,000 within 0.1% of step 10,000) cannot do that job under a learning rate
+   that decays to zero at step 30,000: error can still be falling by more than 0.1% while the
+   model is already inside the 1% equivalence margin, so the rule would mark most cells "not
+   converged". The `converged` column is still computed and printed, per run and per cell (a
+   cell is converged only if all five runs are), but it no longer overrides a verdict. Instead,
+   every primary finding of a difference is re-tested at twice the training length (section 6).
+3. **Margins are two-sided,** as coded: a model that beats the benchmark at a fixed rho by more
+   than the margin is not "equivalent".
+4. **Budget rule** as in section 10: small sizes move to the laptop first, then size `m` drops
+   to three seeds; size `l` is never cut; if the projection still exceeds the cap the sweep
+   does not start and the owner decides.
+5. **H3 multiplicity:** Bonferroni across the eight primary cell-rho combinations (section 7).
+6. **Scope.** The mismatched-prior and mid-sequence-break arms are dropped from this study; they
+   are not built and are not run. All analysis code (verdicts, selection, the H3 rule, the
+   human overlay, the survey comparison) lives outside `rt/` and `configs/`, in `analysis/`, so
+   that writing it does not change the gated code hash. It must implement sections 6–7 exactly
+   as written here. The full-information rational and least-squares forecasts are reported from
+   `analysis/` as descriptive rows.
+7. **Family B priors and AKLMT.** The Family B priors are fixed (section 2). Whether they cover
+   AKLMT's mean and noise ranges is checked when the overlay is built and reported with it. It
+   affects only the descriptive overlay.
 
 ## 1. Question and logic
 
@@ -227,15 +208,37 @@ and the gap and excess-error columns compare model and benchmark on the same pai
 - **different** if lo > m or hi < −m (the sign of the mean is reported with it);
 - **inconclusive** otherwise.
 
-Both margins are two-sided (open point 3).
+Both margins are two-sided (owner decision 3).
 
-**Convergence.** A run is converged if the model's squared error at h = 1 on the prior
-evaluation set (standardised for Family B) at step 30,000 is within 0.1% (relative) of its value
-at step 10,000 (`rt.evaluate.evaluate_all`; `converged` is False if either checkpoint is
-missing). **Proposed rule (open point 2):** a cell (family, size, window) is converged only if
-all five of its runs are converged. Every verdict of a non-converged cell is reported as
-**"not converged"**, never as a bias and never as equivalence; the underlying numbers are still
-printed.
+**Convergence column (descriptive).** A run is converged if the model's squared error at h = 1
+on the prior evaluation set (standardised for Family B) at step 30,000 is within 0.1% (relative)
+of its value at step 10,000 (`rt.evaluate.evaluate_all`; `converged` is False if either
+checkpoint is missing). A cell (family, size, window) is converged only if all five of its runs
+are. The column is printed for every run and cell. It does not change a verdict (owner
+decision 2).
+
+**Training-length check (binding).** Under-training is separated from bias by training longer,
+not by a plateau test. A *flagged finding* is, at size `l`: any "different" verdict in H1 or
+H2, or any H3 combination that is positive after the adjustment. For every cell with a flagged
+finding, all five seeds are re-trained from scratch under a configuration identical to
+`configs/grid.json` except `max_steps` = 60,000 (warm-up 500, cosine to zero at 60,000) and a
+checkpoint added at 60,000, written to a separate results directory, and evaluated on the same
+evaluation sets. The finding **survives** if the same verdict holds at step 60,000 in the same
+column, at the same rho, with the same sign (for H3: positive after the same adjustment). Then:
+
+- survives: the finding stands and is reported with both training lengths;
+- does not survive: reported as **"not robust to training length"**, never as a bias. For H1
+  and H2 the hypothesis is then "not established" at that cell, unless the 60,000-step verdicts
+  are all "equivalent", which is reported as such next to the 30,000-step result but does not
+  turn the pre-registered 30,000-step decision into "supported";
+- not run, because the budget cap does not cover it: reported as **"different at 30,000 steps;
+  not tested for training length"**, and no claim of bias is made from it.
+
+"Equivalent" and "inconclusive" verdicts are not re-tested. The doubled configuration is a new
+effective config, so it needs its own green gate; it is logged as a deviation tag
+(`prereg-v1.x`, section 10) with nothing else changed. If more cells are flagged than the
+budget covers, they are run in this order: H3 positives, then H1, then H2 from the smallest
+window up.
 
 **Checkpoint.** Every confirmatory verdict uses step 30,000, the last checkpoint.
 
@@ -250,8 +253,8 @@ Each hypothesis reads only the rows named. "Every grid rho" means rho ∈ {0.0, 
 rho; columns `excess_mse_pct` and `gap`. That is 6 rho × 2 columns = 12 verdicts.
 
 **Decision:** H1 is **supported** if all 12 are "equivalent". It is **rejected** if any is
-"different"; the rho, column and sign are the finding. Otherwise (any "inconclusive" or the cell
-"not converged") H1 is **not established**. Requiring all 12 is an intersection test, so no
+"different"; the rho, column and sign are the finding. Otherwise (any "inconclusive") H1 is **not established**. A "different" verdict is subject to the
+training-length check of section 6 before it is reported as a finding. Requiring all 12 is an intersection test, so no
 multiplicity adjustment is needed.
 
 ### H2 (information or learning): window-limited models against window-Bayes
@@ -270,21 +273,24 @@ same table, and do not enter the decision. Two-sided.
   forecast that responds to x_t correctly on average but is noisier than window-Bayes; a negative
   excess error beyond −1 is beating window-Bayes at that rho by leaning toward it, which must
   cost elsewhere under the prior.
-- Otherwise: **not established** at that window ("inconclusive" or "not converged").
+- Otherwise: **not established** at that window ("inconclusive").
+
+Every "different" verdict at size `l` is subject to the training-length check of section 6.
 
 The four windows are reported separately; no pooled statement across windows is made.
 
 ### H3 (the human signature): overreaction where the matched Bayesian underreacts
 
 **Rows:** `family = A, window ∈ {2, 4, 8, 16}, bench = window_bayes, h = 1, step = 30000,
-rho ∈ {0.6, 0.8}`, column `gap`, converged cells only. **Size `l` is primary:** 4 windows ×
+rho ∈ {0.6, 0.8}`, column `gap`. **Size `l` is primary:** 4 windows ×
 2 rho = **8 cell-rho combinations.** A combination is **positive** if the lower end of the 95%
 interval of the mean gap is above +0.02.
 
-**The rule (proposed, open point 5).** H3 is **supported** only if at least one of the 8 primary
+**The rule (owner decision 5).** H3 is **supported** only if at least one of the 8 primary
 combinations is positive after a Bonferroni adjustment for 8: the lower end of the
 1 − 0.05/8 (99.375%) Student-t interval, mean − 5.261 · sd / √5, is above +0.02. The
-denominator is 8 even if some of the combinations are not converged. A combination that is
+denominator is always 8. A combination that is positive after the adjustment is a flagged
+finding and counts as support only if it survives the training-length check of section 6. A combination that is
 positive at 95% but not after the adjustment is reported as "k of 8 positive at 95%, none after
 adjustment", not as support. The other sizes (xs, s, m: 24 more combinations) are reported with
 their count of positives at 95% out of 24, descriptively. A single positive anywhere is reported
@@ -303,9 +309,8 @@ there would be reported under H1.
 - **The rho = 0 behaviour seen before the freeze** (section 9): at h = 1 the small model
   overstated persistence at rho = 0 against Bayes (+0.075 to +0.138, depending on architecture).
   Whether it closes with training and size is described, not tested.
-- **Mismatched prior** (train on rho ~ U[0.5, 1], test on low rho) and **mid-sequence break** in
-  rho: not in the grid or the code (open point 6); run only if budget remains after the
-  confirmatory sweep, and never in place of it.
+- **Mismatched prior** and **mid-sequence break** in rho, listed as exploratory in the design:
+  **dropped** (owner decision 6). Not built, not run; the write-up says so.
 - **Family B human overlay (descriptive):** implied persistence against rho for Family B size
   `l` at each window, with the Family B Bayes curve and the AKLMT human-subject curve copied
   from EWH with provenance.
@@ -412,8 +417,8 @@ against Bayes: rho 0.0: gap +0.0747, excess 2.519; 0.2: +0.0337, 0.295; 0.4: −
 "affine, raw+asinh" column.)
 
 Nothing from sizes `xs`, `m` or `l`, from any seed other than 0, from Family B models, from
-windows other than full and 4, or from 30,000-step training has been seen. If the gate is re-run
-before the tag (open point 1), its learning-check numbers are added here.
+windows other than full and 4, or from 30,000-step training has been seen. The gate is re-run
+before the tag (owner decision 1); its learning-check numbers are added below.
 
 ## 10. Deviations and budget
 
@@ -435,8 +440,9 @@ not launch are reported as not run.
 
 ## 11. Reported regardless of outcome
 
-- Every verdict of H1, H2 and H3 as defined, including "inconclusive" and "not converged", with
-  the seed mean, the interval and the five seed values.
+- Every verdict of H1, H2 and H3 as defined, including "inconclusive", with the seed mean, the
+  interval and the five seed values; for every flagged finding, the outcome of the
+  training-length check or the statement that it was not run.
 - The full metrics CSVs for every run and checkpoint, and the convergence status of every run
   and cell.
 - The H2 tables for all four sizes and the H3 counts for every size.
