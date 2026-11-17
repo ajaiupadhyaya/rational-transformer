@@ -3,3 +3,5 @@
 __pycache__/
 results/checkpoints/
 *.pt
+results/eval/
+results/gate/
