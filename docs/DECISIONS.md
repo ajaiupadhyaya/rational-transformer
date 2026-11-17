@@ -197,4 +197,6 @@ The owner signed off `docs/PREREG.md` with these decisions (PREREG, "Owner decis
 - Analysis code lives in `analysis/`, outside the gated `rt/` and `configs/`.
 - Margins two-sided as coded; budget rule never cuts size `l`.
 
-Not yet done at this entry: the gate re-run (the laptop was on battery) and the `prereg-v1` tag.
+Gate re-run on mains power, 2026-11-17: GATE PASS at code hash `ecb0d185…`. Learning check
+reproduced exactly (prior h=1 excess 0.719% at step 3,000), so no new exposure. Then tagged
+`prereg-v1`.

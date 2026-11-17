@@ -417,8 +417,15 @@ against Bayes: rho 0.0: gap +0.0747, excess 2.519; 0.2: +0.0337, 0.295; 0.4: −
 "affine, raw+asinh" column.)
 
 Nothing from sizes `xs`, `m` or `l`, from any seed other than 0, from Family B models, from
-windows other than full and 4, or from 30,000-step training has been seen. The gate is re-run
-before the tag (owner decision 1); its learning-check numbers are added below.
+windows other than full and 4, or from 30,000-step training has been seen. The gate was re-run
+before the tag (owner decision 1):
+
+**Gate re-run, 2026-11-17** (`results/gate.json`, code hash `ecb0d185…`, the tagged code; mps).
+GATE PASS. Benchmark and planted checks gave the same values as listed above. The learning check
+(A-s-wfull-s0, affine head, raw+asinh, 3,000 steps) reproduced the second learning check exactly:
+prior set, h = 1, excess over Bayes 78.862% (step 100), 5.208% (300), 1.415% (1,000), 0.719%
+(3,000); gap −0.0006, kappa +0.0048 at step 3,000. Training is deterministic for a given seed and
+device, so this re-run exposed nothing new.
 
 ## 10. Deviations and budget
 
