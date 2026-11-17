@@ -5,7 +5,12 @@ and those observations' true time indices; with the full window it sees x[1..t].
 x[:, 0] (Family A: the constant 0; Family B: the hidden mean) is never an input.
 Values are fed raw, without normalisation, because the benchmark sees raw values.
 
+Architecture options come from the config keys "head" ("linear" | "affine") and "inputs"
+("raw" | "raw+asinh"), see rt/model.py; the defaults are the original network. They are
+saved with every checkpoint and evaluation rebuilds the model from them.
+
 Usage: uv run python -m rt.train --cell A-s-wfull-s0 --device mps [--max-steps N]
+         [--head linear|affine] [--inputs raw|raw+asinh] [--out DIR]
 """
 import argparse
 import json
@@ -21,7 +26,7 @@ import numpy as np
 import pandas as pd
 import torch
 
-from rt.model import HORIZONS, SIZES, Forecaster
+from rt.model import HEADS, HORIZONS, INPUTS, SIZES, Forecaster
 from rt.sim import sample_family_a, sample_family_b
 
 CONFIG_PATH = Path(__file__).resolve().parent.parent / "configs" / "grid.json"
@@ -30,7 +35,9 @@ SAMPLERS = {"A": sample_family_a, "B": sample_family_b}
 TRAIN_SEED_TAG = 0xA11CE      # keeps training streams apart from eval seeds (10_000 + i)
 # config keys that shape the training trajectory; a resume must not change them
 TRAJECTORY_KEYS = ("sizes", "t_max", "horizons", "lr", "weight_decay", "betas",
-                   "warmup_steps", "batch_size", "max_steps")
+                   "warmup_steps", "batch_size", "max_steps", "head", "inputs")
+# architecture keys a config written before they existed implicitly had
+MODEL_DEFAULTS = {"head": "linear", "inputs": "raw"}
 LOG_COLUMNS = ["step", "loss", "lr", "seconds"]
 _ID_RE = re.compile(r"^(A|B)-([a-z]+)-w(full|\d+)-s(\d+)$")
 
@@ -71,6 +78,12 @@ def load_cfg(**overrides) -> dict:
             raise KeyError(f"unknown config key {k!r}")
         cfg[k] = v
     return cfg
+
+
+def build_model(cfg: dict, size: str) -> Forecaster:
+    """The Forecaster a config describes (a config without "head"/"inputs" -> defaults)."""
+    return Forecaster(*cfg["sizes"][size], head=cfg.get("head", MODEL_DEFAULTS["head"]),
+                      inputs=cfg.get("inputs", MODEL_DEFAULTS["inputs"]))
 
 
 # ---- data -------------------------------------------------------------------
@@ -162,7 +175,7 @@ def train_cell(cell: Cell, cfg: dict, out_dir, device: str) -> Path:
 
     dev = torch.device(device)
     torch.manual_seed(cell.seed)
-    model = Forecaster(*cfg["sizes"][cell.size]).to(dev)
+    model = build_model(cfg, cell.size).to(dev)
     opt = torch.optim.AdamW(model.parameters(), lr=cfg["lr"], betas=tuple(cfg["betas"]),
                             weight_decay=cfg["weight_decay"])
     warmup = int(cfg["warmup_steps"])
@@ -173,7 +186,9 @@ def train_cell(cell: Cell, cfg: dict, out_dir, device: str) -> Path:
     if existing:
         latest = max(existing)
         ck = torch.load(existing[latest], map_location=dev, weights_only=True)
-        changed = [k for k in TRAJECTORY_KEYS if ck["config"].get(k) != cfg.get(k)]
+        changed = [k for k in TRAJECTORY_KEYS
+                   if ck["config"].get(k, MODEL_DEFAULTS.get(k))
+                   != cfg.get(k, MODEL_DEFAULTS.get(k))]
         if changed:
             raise ValueError(f"{out}: checkpoint step{latest}.pt was trained with different "
                              f"{changed}; use a fresh output directory")
@@ -235,13 +250,18 @@ def main(argv=None) -> None:
     ap.add_argument("--device", default="cpu", help="cpu, mps or cuda")
     ap.add_argument("--max-steps", type=int, default=None)
     ap.add_argument("--out", default="results/checkpoints")
+    ap.add_argument("--head", choices=HEADS, default=None, help="override config 'head'")
+    ap.add_argument("--inputs", choices=INPUTS, default=None, help="override config 'inputs'")
     args = ap.parse_args(argv)
     cell = Cell.parse(args.cell)
-    cfg = load_cfg() if args.max_steps is None else load_cfg(max_steps=args.max_steps)
+    over = {k: v for k, v in (("max_steps", args.max_steps), ("head", args.head),
+                              ("inputs", args.inputs)) if v is not None}
+    cfg = load_cfg(**over)
     out = train_cell(cell, cfg, args.out, args.device)
     log = pd.read_csv(out / "train_log.csv")
     last = log.iloc[-1]
-    print(f"{cell.id}: step {int(last.step)}  loss {last.loss:.4f}  "
+    print(f"{cell.id} [{cfg['head']}, {cfg['inputs']}]: step {int(last.step)}  "
+          f"loss {last.loss:.4f}  "
           f"{last.seconds:.0f}s on {args.device}  -> {out}")
 
 

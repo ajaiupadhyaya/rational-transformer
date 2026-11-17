@@ -5,6 +5,19 @@ is reserved as the padding marker: a position with times == 0 is never
 attended to by any other position, and its own output is meaningless (callers
 ignore it). So a left-padded window gives exactly the forecasts the unpadded
 window would.
+
+Two architecture options (config keys "head" and "inputs"; defaults are the original
+network):
+- head "linear": forecasts = head(ln_f(h)), 6 numbers per position.
+  head "affine": head(ln_f(h)) gives 12 numbers per position, (a_h, b_h) for h = 1..6,
+  and the forecast is a_h * x_t + b_h with x_t the raw value at that position (the last
+  position of a left-padded window is its last real value). The a_h rows of the head
+  start at zero, so a_h starts at 0. LayerNorm bounds what head(ln_f(h)) can output; the
+  affine head lets the forecast scale with x_t instead.
+- inputs "raw": the value is embedded by Linear(1, d) from [x].
+  inputs "raw+asinh": embedded by Linear(2, d) from [x, asinh(x)].
+Both use only the inputs at the forecast's own position and earlier real positions, so
+the information rule is the same for every variant.
 """
 import torch
 import torch.nn.functional as F
@@ -13,6 +26,8 @@ from torch import nn
 SIZES = {"xs": (1, 32, 2), "s": (2, 64, 4), "m": (4, 128, 4), "l": (8, 256, 8)}
 N_TIMES = 87       # index 0 = pad, 1..86 = real time indices
 HORIZONS = 6
+HEADS = ("linear", "affine")
+INPUTS = ("raw", "raw+asinh")
 
 
 class Block(nn.Module):
@@ -41,21 +56,36 @@ class Block(nn.Module):
 
 
 class Forecaster(nn.Module):
-    def __init__(self, n_layers: int, d_model: int, n_heads: int):
+    def __init__(self, n_layers: int, d_model: int, n_heads: int,
+                 head: str = "linear", inputs: str = "raw"):
         super().__init__()
         assert d_model % n_heads == 0
-        self.value_in = nn.Linear(1, d_model)
+        if head not in HEADS:
+            raise ValueError(f"unknown head {head!r}; want one of {HEADS}")
+        if inputs not in INPUTS:
+            raise ValueError(f"unknown inputs {inputs!r}; want one of {INPUTS}")
+        self.head_kind, self.inputs_kind = head, inputs
+        self.value_in = nn.Linear(1 if inputs == "raw" else 2, d_model)
         self.time_emb = nn.Embedding(N_TIMES, d_model, padding_idx=0)
         self.blocks = nn.ModuleList(Block(d_model, n_heads) for _ in range(n_layers))
         self.ln_f = nn.LayerNorm(d_model)
-        self.head = nn.Linear(d_model, HORIZONS)
+        if head == "linear":
+            self.head = nn.Linear(d_model, HORIZONS)
+        else:
+            self.head = nn.Linear(d_model, 2 * HORIZONS)      # rows 0..5: a_h, 6..11: b_h
+            with torch.no_grad():
+                self.head.weight[:HORIZONS].zero_()
+                self.head.bias[:HORIZONS].zero_()
 
     def forward(self, values: torch.Tensor, times: torch.Tensor) -> torch.Tensor:
         """values (B, L) float, times (B, L) int -> forecasts (B, L, 6)."""
         times = times.long()
         pad = times == 0
         values = values.masked_fill(pad, 0.0)
-        h = self.value_in(values.unsqueeze(-1)) + self.time_emb(times)
+        feats = values.unsqueeze(-1)
+        if self.inputs_kind == "raw+asinh":
+            feats = torch.cat([feats, torch.asinh(feats)], dim=-1)
+        h = self.value_in(feats) + self.time_emb(times)
         if pad.any():
             L = values.shape[1]
             idx = torch.arange(L, device=values.device)
@@ -70,4 +100,8 @@ class Forecaster(nn.Module):
             allowed = None      # no padding: plain causal mask (fused kernels on cuda)
         for blk in self.blocks:
             h = blk(h, allowed)
-        return self.head(self.ln_f(h))
+        out = self.head(self.ln_f(h))
+        if self.head_kind == "linear":
+            return out
+        a, b = out[..., :HORIZONS], out[..., HORIZONS:]
+        return a * values.unsqueeze(-1) + b

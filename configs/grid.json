@@ -4,6 +4,8 @@
   "seeds": [0, 1, 2, 3, 4],
   "t_max": 80,
   "horizons": 6,
+  "head": "linear",
+  "inputs": "raw",
   "optimizer": "adamw",
   "lr": 0.001,
   "weight_decay": 0.01,

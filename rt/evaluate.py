@@ -42,7 +42,8 @@ from rt.bayes import bayes_a, bayes_b
 from rt.diagnostics import eor_b, excess_mse_pct, implied_persistence, kappa
 from rt.model import Forecaster
 from rt.sim import HORIZONS, RHOS, T_EVAL, Batch
-from rt.train import SAMPLERS, T_MAX, Cell, _checkpoints, batch_from_x, load_cfg
+from rt.train import (SAMPLERS, T_MAX, Cell, _checkpoints, batch_from_x, build_model,
+                      load_cfg)
 
 ROOT = Path(__file__).resolve().parent.parent
 EVAL_DIR = ROOT / "results" / "eval"
@@ -222,8 +223,10 @@ def set_metrics(batch: Batch, F_model: np.ndarray,
 # ---- one checkpoint, every checkpoint ---------------------------------------
 
 def _load_model(cell: Cell, path: Path) -> tuple[Forecaster, dict]:
+    """The checkpoint's model, rebuilt from the config it was trained under (architecture
+    options included; never from the evaluation config), and that config."""
     ck = torch.load(path, map_location="cpu", weights_only=True)
-    model = Forecaster(*ck["config"]["sizes"][cell.size])
+    model = build_model(ck["config"], cell.size)
     model.load_state_dict(ck["model"])
     return model, ck["config"]
 

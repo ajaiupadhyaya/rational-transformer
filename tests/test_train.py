@@ -173,3 +173,99 @@ def test_mps_matches_cpu():
     out = m(v, times)
     out_mps = m.to("mps")(v.to("mps"), times.to("mps")).cpu()
     assert torch.allclose(out[:, 2:], out_mps[:, 2:], atol=1e-4)
+
+
+# ---- architecture options: head and inputs ---------------------------------
+
+VARIANTS = [(h, i) for h in ("linear", "affine") for i in ("raw", "raw+asinh")]
+
+
+@pytest.mark.parametrize("head,inputs", VARIANTS)
+def test_forward_shape_for_each_variant(head, inputs):
+    m = Forecaster(*SIZES["xs"], head=head, inputs=inputs)
+    v, t = torch.randn(4, 80) * 20.0, torch.arange(1, 81).repeat(4, 1)
+    out = m(v, t)
+    assert out.shape == (4, 80, 6) and torch.isfinite(out).all()
+    assert m.value_in.in_features == (1 if inputs == "raw" else 2)
+    assert m.head.out_features == (6 if head == "linear" else 12)
+
+
+def test_default_variant_is_the_original_network():
+    torch.manual_seed(0)
+    a = Forecaster(*SIZES["xs"])
+    torch.manual_seed(0)
+    b = Forecaster(*SIZES["xs"], head="linear", inputs="raw")
+    sa, sb = a.state_dict(), b.state_dict()
+    assert sa.keys() == sb.keys() and all(torch.equal(sa[k], sb[k]) for k in sa)
+    assert load_cfg()["head"] == "linear" and load_cfg()["inputs"] == "raw"
+    with pytest.raises(ValueError):
+        Forecaster(*SIZES["xs"], head="quadratic")
+    with pytest.raises(ValueError):
+        Forecaster(*SIZES["xs"], inputs="log")
+
+
+@pytest.mark.parametrize("inputs", ["raw", "raw+asinh"])
+def test_affine_head_starts_with_a_zero_and_is_affine_in_the_current_value(inputs):
+    torch.manual_seed(0)
+    m = Forecaster(*SIZES["xs"], head="affine", inputs=inputs)
+    assert torch.equal(m.head.weight[:6], torch.zeros_like(m.head.weight[:6]))
+    assert torch.equal(m.head.bias[:6], torch.zeros(6))
+    with torch.no_grad():                           # give a_h a value, then check the formula
+        m.head.weight[:6].normal_()
+        m.head.bias[:6].fill_(0.5)
+    v, t = torch.randn(2, 10) * 5.0, torch.arange(1, 11).repeat(2, 1)
+    h = m.time_emb(t) + m.value_in(
+        v.unsqueeze(-1) if inputs == "raw" else torch.stack([v, torch.asinh(v)], -1))
+    for blk in m.blocks:
+        h = blk(h, None)
+    ab = m.head(m.ln_f(h))
+    expect = ab[..., :6] * v.unsqueeze(-1) + ab[..., 6:]
+    assert torch.allclose(m(v, t), expect, atol=1e-5)
+
+
+@pytest.mark.parametrize("inputs", ["raw", "raw+asinh"])
+def test_affine_head_keeps_the_information_rule(inputs):
+    torch.manual_seed(1)
+    m = Forecaster(*SIZES["s"], head="affine", inputs=inputs)
+    with torch.no_grad():                           # a_h != 0, so x_t really enters
+        m.head.weight[:6].normal_(0.0, 0.1)
+    # causality: later values never move earlier forecasts
+    v, t = torch.randn(4, 80) * 10.0, torch.arange(1, 81).repeat(4, 1)
+    out = m(v, t)
+    v2 = v.clone(); v2[:, 50:] += 7.0
+    assert torch.allclose(m(v2, t)[:, :50], out[:, :50], atol=1e-5)
+    assert not torch.allclose(m(v2, t)[:, 50:], out[:, 50:], atol=1e-3)
+    # pads: garbage at padded positions changes nothing; padded = unpadded prefix
+    real = torch.arange(1, 6)
+    times = torch.cat([torch.zeros(3, dtype=torch.long), real]).repeat(4, 1)
+    w = torch.randn(4, 8)
+    o = m(w, times)
+    w2 = w.clone(); w2[:, :3] = torch.randn(4, 3) * 100.0
+    assert torch.allclose(m(w2, times)[:, 3:], o[:, 3:], atol=1e-5)
+    assert torch.allclose(o[:, 3:], m(w[:, 3:], real.repeat(4, 1)), atol=1e-5)
+
+
+def test_cli_head_and_inputs_overrides_reach_the_checkpoint(tmp_path):
+    from rt.train import main
+    main(["--cell", "A-xs-w2-s0", "--max-steps", "2", "--head", "affine",
+          "--inputs", "raw+asinh", "--out", str(tmp_path)])
+    ck = torch.load(tmp_path / "A-xs-w2-s0" / "step2.pt", weights_only=True)
+    assert ck["config"]["head"] == "affine" and ck["config"]["inputs"] == "raw+asinh"
+    assert ck["model"]["head.weight"].shape[0] == 12
+    assert ck["model"]["value_in.weight"].shape[1] == 2
+
+
+def test_resume_refuses_a_changed_architecture_and_accepts_old_configs(tmp_path):
+    cell = Cell("A", "xs", 2, 0)
+    cfg = load_cfg(max_steps=60, checkpoints=[50], batch_size=32)
+    train_cell(cell, cfg, tmp_path, "cpu")
+    (tmp_path / cell.id / "step60.pt").unlink()
+    with pytest.raises(ValueError):
+        train_cell(cell, {**cfg, "head": "affine"}, tmp_path, "cpu")
+    # a checkpoint written before the keys existed resumes under the defaults
+    p = tmp_path / cell.id / "step50.pt"
+    ck = torch.load(p, weights_only=True)
+    del ck["config"]["head"], ck["config"]["inputs"]
+    torch.save(ck, p)
+    out = train_cell(cell, cfg, tmp_path, "cpu")
+    assert torch.load(out / "step60.pt", weights_only=True)["meta"]["resumed_from"] == 50

@@ -181,3 +181,45 @@ def test_bench_forecasts_family_b_uses_grid_2001_and_full_window_alias(tmp_path)
     assert f["window_bayes"] is f["bayes"]              # one array, standardised once
     assert np.allclose(f["fire"][:, 1:, 0], b.x[:, 1:81])       # rho = 1: random walk
     assert f["ls"].shape == (10, 81, 6)
+
+
+# ---- architecture options survive the checkpoint ---------------------------
+
+def test_affine_head_respects_window_in_model_forecasts():
+    import torch
+    torch.manual_seed(0)
+    m = Forecaster(*SIZES["xs"], head="affine", inputs="raw+asinh")
+    with torch.no_grad():
+        m.head.weight[:6].normal_(0.0, 0.1)
+    b = sample_family_a(8, np.random.default_rng(0))
+    x2 = b.x.copy(); x2[:, :40] += 5.0                 # change only old history
+    F1, F2 = model_forecasts(m, b.x, 4, "cpu"), model_forecasts(m, x2, 4, "cpu")
+    assert np.allclose(F1[:, 44:], F2[:, 44:], atol=1e-5)
+    assert not np.allclose(F1[:, 1:40], F2[:, 1:40], atol=1e-3)
+
+
+@pytest.mark.parametrize("window", [None, 4])
+def test_non_default_variant_checkpoint_evaluates_with_that_variant(tmp_path, window):
+    import torch
+    train = _tiny_cfg(max_steps=20, checkpoints=[20], head="affine", inputs="raw+asinh")
+    cell = Cell("A", "xs", window, 0)
+    train_cell(cell, train, tmp_path / "ck", "cpu")
+    path = tmp_path / "ck" / cell.id / "step20.pt"
+    model, saved = ev._load_model(cell, path)
+    assert (model.head_kind, model.inputs_kind) == ("affine", "raw+asinh")
+    assert saved["head"] == "affine" and saved["inputs"] == "raw+asinh"
+    # the same forecasts as a model built by hand from the variant
+    by_hand = Forecaster(*SIZES["xs"], head="affine", inputs="raw+asinh")
+    by_hand.load_state_dict(torch.load(path, weights_only=True)["model"])
+    b = sample_family_a(6, np.random.default_rng(2))
+    assert np.allclose(model_forecasts(model, b.x, window, "cpu"),
+                       model_forecasts(by_hand, b.x, window, "cpu"), equal_nan=True)
+    # evaluation with the DEFAULT evaluation config still uses the checkpoint's variant
+    ev_cfg = _tiny_cfg(eval_n_per_rho=50, eval_n_prior=50)
+    assert ev_cfg["head"] == "linear"
+    df = evaluate_cell(cell, 20, ev_cfg, "cpu", ckpt_dir=tmp_path / "ck",
+                       eval_dir=tmp_path / "eval")
+    assert len(df) == 84 and df.excess_mse_pct.notna().all()
+    out = evaluate_all(cell, ev_cfg, "cpu", ckpt_dir=tmp_path / "ck", out_dir=tmp_path / "m",
+                       eval_dir=tmp_path / "eval")
+    assert np.allclose(out.excess_mse_pct.values, df.excess_mse_pct.values)
