@@ -200,3 +200,32 @@ The owner signed off `docs/PREREG.md` with these decisions (PREREG, "Owner decis
 Gate re-run on mains power, 2026-11-17: GATE PASS at code hash `ecb0d185…`. Learning check
 reproduced exactly (prior h=1 excess 0.719% at step 3,000), so no new exposure. Then tagged
 `prereg-v1`.
+
+## 2026-11-17: cloud pilot (timing only; no diagnostic was looked at)
+
+One RTX A6000 (Thunder Compute, prototyping mode, 8 vCPU), 17:36:46 to 19:15:49 UTC (99 min),
+instance 3lnydbl8, deleted. Tests 104 passed, 1 skipped; gate PASS at code hash `ecb0d185…` on
+CUDA with the same benchmark numbers and learning check (0.719%) as the Mac. Logs:
+`results/cloud/pilot/`.
+
+Training steps/second (A-<size>-<window>-s0, fp32 unless noted; "agg" = combined over jobs):
+
+| cell | 1 job | 4 jobs agg | 8 jobs agg | TF32, 1 job |
+|---|---|---|---|---|
+| xs full | 44.6 | 58.9 | 60.0 (135.7 with 1 CPU thread per job) | |
+| s full | 39.5 | 46.1 | 47.4 (46.6 with 1 thread) | |
+| m full | 15.6 | 15.5 | 15.5 | 19.4 |
+| l full | 3.53 | 3.32 | out of GPU memory (~10 GB per job) | 5.16 |
+| l w16 | 14.7 | 14.1 | | 19.3 |
+| l w2 | 22.7 | 40.5 | | |
+| m w16 | 32.1 | 60.9 | | |
+
+Evaluation of one checkpoint (size l): w4 286 s cold / 198 s warm (167 s with TF32); full window
+65 s; Family B w4 737 s cold (benchmark cache built on the instance CPU) / 197 s warm. Profile
+(A-l-w4 warm): ~170 s GPU forward, ~45 s diagnostics, ~30 s input building. Windowed evaluation
+cost scales with W (every origin is a separate forward over 220,000 sequences). The benchmark
+cache for both families and all windows (70 files, 8 GB) was then built on the Mac in ~10 min.
+
+Projection for the configured grid on this GPU, even with TF32 and xs/s moved to the Mac: about
+57 GPU-hours (size l ~49 h, size m ~8 h), against ~28-34 h that $12 buys. Over the cap: per
+PREREG section 10 the sweep does not start; the owner decides.

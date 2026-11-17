@@ -23,14 +23,17 @@ locked uv environment instead).
 
 ```bash
 tnr status --no-wait                                   # list instances
-tnr create --gpu a6000 --num-gpus 1 --vcpus 8 --template base --disk 100
+tnr create --mode prototyping --gpu a6000 --num-gpus 1 --vcpus 8 --template base --disk-size-gb 100 --yes --json
 tnr connect 0                                          # first connect writes ~/.ssh/config
 tnr scp <src> 0:<dst>                                  # or plain ssh/rsync via the alias
 tnr delete 0                                           # ends billing; removes all data
 ```
 
-`tnr create --help` crashes when not attached to a terminal (CLI 2.0.51); the flags above are
-from the docs.
+`tnr create --help` crashes when not attached to a terminal (CLI 2.0.51). The A6000 exists only
+in "prototyping" mode, where `nvidia-smi` shows 0% utilisation regardless of load. The first
+`tnr connect 0` writes the `tnr-0` alias to `~/.ssh/config`. The image has no `tmux` and no `bc`
+(use `nohup`). Never `pkill -f <pattern>` over ssh when the pattern is in the ssh command line:
+it kills its own session. Remote `scp` does not expand `{a,b}`.
 
 ## Workflow
 
