@@ -6,7 +6,7 @@ x[:, 0] (Family A: the constant 0; Family B: the hidden mean) is never an input.
 Values are fed raw, without normalisation, because the benchmark sees raw values.
 
 Architecture options come from the config keys "head" ("linear" | "affine") and "inputs"
-("raw" | "raw+asinh"), see rt/model.py; the defaults are the original network. They are
+("raw" | "raw+asinh"), see rt/model.py; the defaults are the affine head with raw+asinh inputs (the original network. They are
 saved with every checkpoint and evaluation rebuilds the model from them.
 
 Usage: uv run python -m rt.train --cell A-s-wfull-s0 --device mps [--max-steps N]
@@ -17,6 +17,7 @@ import json
 import math
 import os
 import re
+import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -29,7 +30,8 @@ import torch
 from rt.model import HEADS, HORIZONS, INPUTS, SIZES, Forecaster
 from rt.sim import sample_family_a, sample_family_b
 
-CONFIG_PATH = Path(__file__).resolve().parent.parent / "configs" / "grid.json"
+CONFIG_PATH = Path(os.environ.get("RT_CONFIG")
+                   or Path(__file__).resolve().parent.parent / "configs" / "grid.json")
 T_MAX = 80                    # forecast origins t = 1..80; targets reach x[86]
 SAMPLERS = {"A": sample_family_a, "B": sample_family_b}
 TRAIN_SEED_TAG = 0xA11CE      # keeps training streams apart from eval seeds (10_000 + i)
@@ -37,7 +39,7 @@ TRAIN_SEED_TAG = 0xA11CE      # keeps training streams apart from eval seeds (10
 TRAJECTORY_KEYS = ("sizes", "t_max", "horizons", "lr", "weight_decay", "betas",
                    "warmup_steps", "batch_size", "max_steps", "head", "inputs")
 # architecture keys a config written before they existed implicitly had
-MODEL_DEFAULTS = {"head": "linear", "inputs": "raw"}
+MODEL_DEFAULTS = {"head": "affine", "inputs": "raw+asinh"}
 LOG_COLUMNS = ["step", "loss", "lr", "seconds"]
 _ID_RE = re.compile(r"^(A|B)-([a-z]+)-w(full|\d+)-s(\d+)$")
 
@@ -158,9 +160,19 @@ def _checkpoints(out: Path) -> dict[int, Path]:
 
 
 def _atomic(path: Path, write) -> None:
-    tmp = path.with_name(path.name + ".tmp")
-    write(tmp)
-    os.replace(tmp, path)
+    """Write `path` via a temp file unique to this writer (same directory), fsync, then
+    os.replace, so concurrent writers of one target can never interleave into it."""
+    path = Path(path)
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=path.name + ".", suffix=".tmp")
+    os.close(fd)
+    try:
+        write(Path(tmp))
+        with open(tmp, "rb+") as fh:
+            os.fsync(fh.fileno())
+        os.replace(tmp, path)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
 
 
 def train_cell(cell: Cell, cfg: dict, out_dir, device: str) -> Path:

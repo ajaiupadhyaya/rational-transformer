@@ -190,14 +190,19 @@ def test_forward_shape_for_each_variant(head, inputs):
     assert m.head.out_features == (6 if head == "linear" else 12)
 
 
-def test_default_variant_is_the_original_network():
+def test_default_variant_is_affine_raw_asinh():
     torch.manual_seed(0)
     a = Forecaster(*SIZES["xs"])
     torch.manual_seed(0)
-    b = Forecaster(*SIZES["xs"], head="linear", inputs="raw")
+    b = Forecaster(*SIZES["xs"], head="affine", inputs="raw+asinh")
     sa, sb = a.state_dict(), b.state_dict()
     assert sa.keys() == sb.keys() and all(torch.equal(sa[k], sb[k]) for k in sa)
-    assert load_cfg()["head"] == "linear" and load_cfg()["inputs"] == "raw"
+    assert load_cfg()["head"] == "affine" and load_cfg()["inputs"] == "raw+asinh"
+    from rt.train import MODEL_DEFAULTS, build_model
+    assert MODEL_DEFAULTS == {"head": "affine", "inputs": "raw+asinh"}
+    bare = {"sizes": SIZES}                       # a config without the keys means the default
+    assert (build_model(bare, "xs").head_kind, build_model(bare, "xs").inputs_kind) == (
+        "affine", "raw+asinh")
     with pytest.raises(ValueError):
         Forecaster(*SIZES["xs"], head="quadratic")
     with pytest.raises(ValueError):
@@ -261,7 +266,7 @@ def test_resume_refuses_a_changed_architecture_and_accepts_old_configs(tmp_path)
     train_cell(cell, cfg, tmp_path, "cpu")
     (tmp_path / cell.id / "step60.pt").unlink()
     with pytest.raises(ValueError):
-        train_cell(cell, {**cfg, "head": "affine"}, tmp_path, "cpu")
+        train_cell(cell, {**cfg, "head": "linear"}, tmp_path, "cpu")
     # a checkpoint written before the keys existed resumes under the defaults
     p = tmp_path / cell.id / "step50.pt"
     ck = torch.load(p, weights_only=True)

@@ -10,21 +10,26 @@ Three checks, written to results/gate.json as
                 `window_bayes <= windowed least squares` for W in {8, 16}
                 (20,000 sequences; Family B on standardised deviations).
   2. planted    the Task 4 planted `kappa` and `gap` values are recovered within 0.01.
-  3. learning   the local learning-check cell (A-s-wfull-s0, 3000 steps, results/gate)
-                reaches `excess_mse_pct < 5` against Bayes on the prior set at h = 1.
+  3. learning   results/gate/learning.json, written by `python -m rt.gate --learn` for the
+                SAME code hash, records `excess_mse_pct < 5` (A-s-wfull-s0, 3000 steps,
+                prior set, h = 1, against Bayes).
 
 The sweep launcher refuses to start unless gate.json says passed and its `code_hash`
 equals the current `code_hash()`, so any edit to rt/*.py or configs/*.json re-opens the gate.
 
-Usage: uv run python -m rt.gate        (prints each check, ends GATE PASS or GATE FAIL)
+Usage: uv run python -m rt.gate --learn --device mps   (once per code state, ~11 min)
+       uv run python -m rt.gate        (prints each check, ends GATE PASS or GATE FAIL)
 """
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import os
+import subprocess
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -34,7 +39,7 @@ from rt.baselines import fire, ls_coefficients
 from rt.bayes import bayes_a, bayes_b
 from rt.diagnostics import eor_b, gap, implied_persistence, kappa
 from rt.sim import T_EVAL, sample_family_a, sample_family_b
-from rt.train import load_cfg
+from rt.train import _atomic, load_cfg
 
 ROOT = Path(__file__).resolve().parent.parent
 N_EOR = 100_000          # prior-drawn sequences for the eor_b check, per family
@@ -160,32 +165,35 @@ def _check_planted(batch_a, fa_full: np.ndarray, log) -> dict:
             "fire_implied_persistence": base}
 
 
-def _check_learning(root: Path, log) -> dict:
-    path = root / "results" / "gate" / "metrics" / f"{LEARNING_CELL}.csv"
-    if not path.exists():
-        msg = (f"missing {path}. Produce it with:\n"
-               f"  uv run python -m rt.train --cell {LEARNING_CELL} --device mps "
-               f"--max-steps {LEARNING_STEP} --out results/gate\n"
-               f"  uv run python -m rt.evaluate --cell {LEARNING_CELL} --device mps "
-               f"--ckpt-dir results/gate --out results/gate/metrics")
-        log("  " + msg.replace("\n", "\n  "))
-        return {"passed": False, "message": msg}
-    df = pd.read_csv(path, dtype={"rho": str})
-    sel = df[(df.step == LEARNING_STEP) & (df.rho == "prior") & (df.h == 1) & (df.bench == "bayes")]
-    if sel.empty:
-        msg = f"{path} has no row for step {LEARNING_STEP}, rho prior, h 1, bench bayes"
+LEARN_CMD = "uv run python -m rt.gate --learn --device mps"
+
+
+def _check_learning(root: Path, current_hash: str, log) -> dict:
+    """Passes only on results/gate/learning.json written by `--learn` for THIS code."""
+    path = root / "results" / "gate" / "learning.json"
+    try:
+        ev = json.loads(path.read_text())
+        excess, ev_hash = float(ev["excess_mse_pct"]), ev["code_hash"]
+    except (OSError, ValueError, KeyError, TypeError):
+        msg = f"missing or unreadable {path}; produce it with: {LEARN_CMD}"
         log("  " + msg)
         return {"passed": False, "message": msg}
-    excess = float(sel.excess_mse_pct.iloc[0])
+    if ev_hash != current_hash:
+        msg = (f"{path} certifies different code (hash {str(ev_hash)[:12]}, now "
+               f"{current_hash[:12]}); re-run: {LEARN_CMD}")
+        log("  " + msg)
+        return {"passed": False, "message": msg, "excess_mse_pct": excess}
     ok = bool(excess < LEARNING_MAX_EXCESS_PCT)
     log(f"  {LEARNING_CELL} step {LEARNING_STEP}: excess_mse_pct {excess:.3f} "
-        f"(< {LEARNING_MAX_EXCESS_PCT})")
+        f"(< {LEARNING_MAX_EXCESS_PCT}), code hash matches")
     return {"passed": ok, "excess_mse_pct": excess, "cell": LEARNING_CELL, "step": LEARNING_STEP}
 
 
-def run_gate(cfg=None, root=None, log=print) -> dict:
+def run_gate(cfg=None, root=None, log=print, hash_fn=None) -> dict:
     cfg = load_cfg() if cfg is None else cfg
     root = ROOT if root is None else Path(root)
+    hash_fn = hash_fn or (lambda: code_hash(root))
+    start_hash = hash_fn()
     rng_a, rng_b = np.random.default_rng(0), np.random.default_rng(0)
     batches = {"A": sample_family_a(N_EOR, rng_a), "B": sample_family_b(N_EOR, rng_b)}
     checks = {}
@@ -199,23 +207,93 @@ def run_gate(cfg=None, root=None, log=print) -> dict:
     checks["planted"] = _check_planted(batches["A"], fa_full, log)
     log(f"  -> {'pass' if checks['planted']['passed'] else 'FAIL'} ({time.perf_counter() - t0:.0f}s)")
     log("check 3: learning")
-    checks["learning"] = _check_learning(root, log)
+    checks["learning"] = _check_learning(root, start_hash, log)
     log(f"  -> {'pass' if checks['learning']['passed'] else 'FAIL'}")
+    end_hash = hash_fn()
+    stable = end_hash == start_hash
+    if not stable:
+        msg = (f"code or config changed while the gate ran (hash {start_hash[:12]} at start, "
+               f"{end_hash[:12]} at end); nothing is certified, re-run the gate")
+        log("code stability: FAIL\n  " + msg)
+        checks["stable"] = {"passed": False, "message": msg}
     return {"passed": all(c["passed"] for c in checks.values()),
-            "code_hash": code_hash(root), "checks": checks}
+            "code_hash": start_hash, "checks": checks}
+
+
+def learn(device: str, root=None, log=print, hash_fn=None, run=subprocess.run) -> int:
+    """Run the learning check as subprocesses and record it against the code it ran on.
+
+    A results/gate directory that was not produced under this same code hash is moved
+    aside to results/gate.stale-<timestamp> (never deleted), so the trainer cannot resume
+    or skip stale checkpoints.
+    """
+    root = ROOT if root is None else Path(root)
+    hash_fn = hash_fn or (lambda: code_hash(root))
+    h0 = hash_fn()
+    gdir = root / "results" / "gate"
+    marker = gdir / "learn_started.json"
+    if gdir.exists() and any(gdir.iterdir()):
+        same = False
+        try:
+            same = json.loads(marker.read_text()).get("code_hash") == h0
+        except (OSError, ValueError):
+            pass
+        if not same:
+            stale = root / "results" / f"gate.stale-{datetime.now(timezone.utc):%Y%m%dT%H%M%S}"
+            os.replace(gdir, stale)
+            log(f"moved old learning-check outputs to {stale}")
+    gdir.mkdir(parents=True, exist_ok=True)
+    marker.write_text(json.dumps({"code_hash": h0}))
+    py = [sys.executable, "-m"]
+    steps = [py + ["rt.train", "--cell", LEARNING_CELL, "--device", device,
+                   "--max-steps", str(LEARNING_STEP), "--out", str(gdir)],
+             py + ["rt.evaluate", "--cell", LEARNING_CELL, "--device", device,
+                   "--ckpt-dir", str(gdir), "--out", str(gdir / "metrics")]]
+    for cmd in steps:
+        log("$ " + " ".join(cmd[2:]))
+        rc = run(cmd, cwd=root).returncode
+        if rc != 0:
+            log(f"learning check failed: {cmd[2]} exited {rc}")
+            return 1
+    h1 = hash_fn()
+    if h1 != h0:
+        log(f"code or config changed during the learning run ({h0[:12]} -> {h1[:12]}); "
+            f"nothing recorded, re-run --learn")
+        return 1
+    df = pd.read_csv(gdir / "metrics" / f"{LEARNING_CELL}.csv", dtype={"rho": str})
+    sel = df[(df.step == LEARNING_STEP) & (df.rho == "prior") & (df.h == 1) & (df.bench == "bayes")]
+    if sel.empty:
+        log(f"no step-{LEARNING_STEP} prior h=1 bayes row in the metrics CSV")
+        return 1
+    ev = {"code_hash": h0, "cell": LEARNING_CELL, "step": LEARNING_STEP,
+          "excess_mse_pct": float(sel.excess_mse_pct.iloc[0]), "device": device,
+          "finished_iso": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+    atomic_write_text(gdir / "learning.json", json.dumps(ev, indent=2))
+    log(f"learning check: excess_mse_pct {ev['excess_mse_pct']:.3f} at step {LEARNING_STEP} "
+        f"(< {LEARNING_MAX_EXCESS_PCT} passes); wrote {gdir / 'learning.json'}")
+    return 0
+
+
+def atomic_write_text(path: Path, text: str) -> None:
+    _atomic(Path(path), lambda p: p.write_text(text))
 
 
 def write_gate(result: dict, root=None) -> Path:
     root = ROOT if root is None else Path(root)
     path = root / "results" / "gate.json"
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(path.name + ".tmp")
-    tmp.write_text(json.dumps(result, indent=2, default=float))
-    os.replace(tmp, path)
+    atomic_write_text(path, json.dumps(result, indent=2, default=float))
     return path
 
 
 def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(description="Run the gate, or the learning check it needs.")
+    ap.add_argument("--learn", action="store_true",
+                    help="run the local learning check and record it against the current code")
+    ap.add_argument("--device", default="mps", help="device for --learn (cpu, mps or cuda)")
+    args = ap.parse_args(argv)
+    if args.learn:
+        return learn(args.device)
     result = run_gate()
     path = write_gate(result)
     print(f"wrote {path}")

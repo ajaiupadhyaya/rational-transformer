@@ -1,11 +1,15 @@
 import json
 import re
+import threading
+import types
+from pathlib import Path
 
 import pandas as pd
 import pytest
 
+from rt import gate
 from rt.gate import _check_learning, code_hash, write_gate
-from rt.sweep import grid, is_complete, main, plan
+from rt.sweep import grid, is_complete, main, plan, subprocess_runner
 from rt.train import Cell, load_cfg
 
 
@@ -172,24 +176,158 @@ def test_grid_counts():
     assert cells[0] == Cell.parse("A-xs-w2-s0")
 
 
-def test_learning_check_missing_file_names_the_commands(tmp_path):
-    r = _check_learning(tmp_path, lambda *_: None)
-    assert not r["passed"]
-    assert "rt.train --cell A-s-wfull-s0" in r["message"] and "rt.evaluate" in r["message"]
+def _learning_json(root, **kw):
+    d = root / "results" / "gate"
+    d.mkdir(parents=True, exist_ok=True)
+    rec = {"code_hash": "h1", "cell": "A-s-wfull-s0", "step": 3000, "excess_mse_pct": 2.29,
+           "device": "mps", "finished_iso": "2026-11-17T00:00:00+00:00", **kw}
+    (d / "learning.json").write_text(json.dumps(rec))
 
 
-@pytest.mark.parametrize("excess,passed", [(2.29, True), (5.0, False), (7.5, False)])
-def test_learning_check_reads_the_prior_row(tmp_path, excess, passed):
-    d = tmp_path / "results" / "gate" / "metrics"
-    d.mkdir(parents=True)
-    rows = [
-        {"step": 3000, "rho": "prior", "h": 1, "bench": "bayes", "excess_mse_pct": excess},
-        {"step": 3000, "rho": "0.0", "h": 1, "bench": "bayes", "excess_mse_pct": 99.0},
-        {"step": 3000, "rho": "prior", "h": 1, "bench": "window_bayes", "excess_mse_pct": 99.0},
-        {"step": 1000, "rho": "prior", "h": 1, "bench": "bayes", "excess_mse_pct": 99.0},
-    ]
-    pd.DataFrame(rows).to_csv(d / "A-s-wfull-s0.csv", index=False)
-    assert _check_learning(tmp_path, lambda *_: None)["passed"] is passed
+def test_learning_check_missing_file_names_the_command(tmp_path):
+    r = _check_learning(tmp_path, "h1", lambda *_: None)
+    assert not r["passed"] and "rt.gate --learn" in r["message"]
+
+
+def test_learning_check_stale_hash_fails(tmp_path):
+    _learning_json(tmp_path, code_hash="old")
+    r = _check_learning(tmp_path, "h1", lambda *_: None)
+    assert not r["passed"] and "--learn" in r["message"]
+
+
+@pytest.mark.parametrize("excess,passed", [(2.29, True), (4.99, True), (5.0, False), (7.5, False)])
+def test_learning_check_value_threshold(tmp_path, excess, passed):
+    _learning_json(tmp_path, excess_mse_pct=excess)
+    assert _check_learning(tmp_path, "h1", lambda *_: None)["passed"] is passed
+
+
+def _stub_heavy(monkeypatch):
+    monkeypatch.setattr(gate, "sample_family_a", lambda *a, **k: types.SimpleNamespace(x=None))
+    monkeypatch.setattr(gate, "sample_family_b", lambda *a, **k: types.SimpleNamespace(x=None))
+    monkeypatch.setattr(gate, "bayes_a", lambda *a, **k: None)
+    monkeypatch.setattr(gate, "_check_benchmark", lambda *a, **k: {"passed": True})
+    monkeypatch.setattr(gate, "_check_planted", lambda *a, **k: {"passed": True})
+
+
+def test_run_gate_records_start_hash_and_passes_when_stable(tmp_path, monkeypatch):
+    _stub_heavy(monkeypatch)
+    _learning_json(tmp_path)
+    r = gate.run_gate(small_cfg(), root=tmp_path, log=lambda *_: None, hash_fn=lambda: "h1")
+    assert r["passed"] and r["code_hash"] == "h1"
+
+
+def test_run_gate_fails_if_code_changes_during_the_run(tmp_path, monkeypatch):
+    _stub_heavy(monkeypatch)
+    _learning_json(tmp_path)
+    hashes = iter(["h1", "h2"])
+    msgs = []
+    r = gate.run_gate(small_cfg(), root=tmp_path, log=msgs.append, hash_fn=lambda: next(hashes))
+    assert not r["passed"] and r["code_hash"] == "h1"
+    assert not r["checks"]["stable"]["passed"]
+    assert any("changed while the gate ran" in m for m in msgs)
+
+
+def _fake_learn_run(root, calls, excess=2.29, on_run=None):
+    def run(cmd, cwd=None):
+        calls.append(cmd[2:])
+        gdir = root / "results" / "gate"
+        if cmd[2] == "rt.train":
+            (gdir / "A-s-wfull-s0").mkdir(parents=True, exist_ok=True)
+            (gdir / "A-s-wfull-s0" / "step3000.pt").write_text("ck")
+        else:
+            (gdir / "metrics").mkdir(parents=True, exist_ok=True)
+            pd.DataFrame([{"step": 3000, "rho": "prior", "h": 1, "bench": "bayes",
+                           "excess_mse_pct": excess}]).to_csv(
+                gdir / "metrics" / "A-s-wfull-s0.csv", index=False)
+        if on_run:
+            on_run()
+        return types.SimpleNamespace(returncode=0)
+    return run
+
+
+def test_learn_moves_stale_dir_aside_and_records_evidence(tmp_path):
+    old = tmp_path / "results" / "gate"
+    old.mkdir(parents=True)
+    (old / "keep-me.txt").write_text("old evidence")
+    calls = []
+    rc = gate.learn("cpu", root=tmp_path, log=lambda *_: None, hash_fn=lambda: "h1",
+                    run=_fake_learn_run(tmp_path, calls))
+    assert rc == 0
+    stale = list((tmp_path / "results").glob("gate.stale-*"))
+    assert len(stale) == 1 and (stale[0] / "keep-me.txt").read_text() == "old evidence"
+    ev = json.loads((tmp_path / "results" / "gate" / "learning.json").read_text())
+    assert ev["code_hash"] == "h1" and ev["excess_mse_pct"] == 2.29 and ev["device"] == "cpu"
+    assert ev["cell"] == "A-s-wfull-s0" and ev["step"] == 3000 and ev["finished_iso"]
+    assert calls[0][:5] == ["rt.train", "--cell", "A-s-wfull-s0", "--device", "cpu"]
+    assert "--max-steps" in calls[0] and "3000" in calls[0]
+    assert "rt.evaluate" in calls[1] and "--ckpt-dir" in calls[1] and "--out" in calls[1]
+    assert _check_learning(tmp_path, "h1", lambda *_: None)["passed"]
+    assert not _check_learning(tmp_path, "h2", lambda *_: None)["passed"]
+
+
+def test_learn_resumes_a_same_code_run_without_moving_it(tmp_path):
+    gdir = tmp_path / "results" / "gate"
+    gdir.mkdir(parents=True)
+    (gdir / "learn_started.json").write_text(json.dumps({"code_hash": "h1"}))
+    rc = gate.learn("cpu", root=tmp_path, log=lambda *_: None, hash_fn=lambda: "h1",
+                    run=_fake_learn_run(tmp_path, []))
+    assert rc == 0 and not list((tmp_path / "results").glob("gate.stale-*"))
+
+
+def test_learn_fails_and_records_nothing_if_code_changes_during_run(tmp_path):
+    hashes = iter(["h1", "h2"])
+    rc = gate.learn("cpu", root=tmp_path, log=lambda *_: None, hash_fn=lambda: next(hashes),
+                    run=_fake_learn_run(tmp_path, []))
+    assert rc == 1 and not (tmp_path / "results" / "gate" / "learning.json").exists()
+
+
+def test_learn_fails_when_a_subprocess_fails(tmp_path):
+    rc = gate.learn("cpu", root=tmp_path, log=lambda *_: None, hash_fn=lambda: "h1",
+                    run=lambda cmd, cwd=None: types.SimpleNamespace(returncode=5))
+    assert rc == 1 and not (tmp_path / "results" / "gate" / "learning.json").exists()
+
+
+def test_concurrent_cache_writers_publish_an_intact_file(tmp_path):
+    import numpy as np
+    from rt.evaluate import _save_atomic_npy
+    arr = np.arange(2_000_000, dtype=np.float64).reshape(1000, 2000)
+    target = tmp_path / "bench.npy"
+    barrier = threading.Barrier(4)
+
+    def writer():
+        barrier.wait()
+        for _ in range(3):
+            _save_atomic_npy(target, arr)
+
+    threads = [threading.Thread(target=writer) for _ in range(4)]
+    [t.start() for t in threads]
+    [t.join() for t in threads]
+    assert np.array_equal(np.load(target), arr)
+    assert [p.name for p in tmp_path.iterdir()] == ["bench.npy"]       # no stray temp files
+
+
+def test_stray_temp_files_do_not_make_a_cell_complete(tmp_path):
+    cfg, cell = load_cfg(), grid(load_cfg())[0]
+    d = tmp_path / "metrics"
+    d.mkdir()
+    pd.DataFrame({"step": cfg["checkpoints"]}).to_csv(d / f"{cell.id}.csv.k3j2h.tmp", index=False)
+    assert not is_complete(cell, cfg, d)
+
+
+def test_subprocess_runner_end_to_end_on_a_tiny_cell(tmp_path, monkeypatch):
+    repo = Path(gate.ROOT)
+    cfg = json.loads((repo / "configs" / "grid.json").read_text())
+    cfg.update(max_steps=20, checkpoints=[10, 20], log_every=10, warmup_steps=5, batch_size=16,
+               eval_n_per_rho=40, eval_n_prior=40)
+    (tmp_path / "grid.json").write_text(json.dumps(cfg))
+    monkeypatch.setenv("RT_CONFIG", str(tmp_path / "grid.json"))
+    monkeypatch.setenv("RT_EVAL_DIR", str(tmp_path / "eval"))
+    monkeypatch.setenv("PYTHONPATH", str(repo))
+    cell = Cell.parse("A-xs-wfull-s0")
+    rc = subprocess_runner("cpu", tmp_path)(cell)
+    assert rc == 0
+    assert is_complete(cell, cfg, tmp_path / "results" / "metrics")
+    assert (tmp_path / "results" / "checkpoints" / cell.id / "step20.pt").exists()
 
 
 def test_write_gate_is_atomic_json(tmp_path):

@@ -151,3 +151,33 @@ Findings:
   ability, but it is a cell where the new heads look worse on the table.
 
 The default is unchanged (`linear`, `raw`); whether to switch is the controller's call.
+
+## 2026-11-17: Default architecture is the affine head with raw+asinh inputs
+
+The grid config (and the fallback defaults in `rt/train.py` / `rt/model.py`, so a config
+without the keys means the same thing) now use `head: "affine"`, `inputs: "raw+asinh"`,
+by controller ruling after the architecture probe (see the probe section above): the linear
+head over a LayerNorm output cannot scale with x_t, which is what left the 3000-step model
+at 148% excess at rho = 1. The old linear/raw learning-check outputs are kept at
+`results/probe/linear-raw-gate`.
+
+Gate check 3 is now bound to the code it certifies: `python -m rt.gate --learn --device mps`
+runs the learning cell as subprocesses and writes `results/gate/learning.json` with the code
+hash; the gate passes check 3 only when that hash equals the current one. The gate also
+fails if the code hash changes while it runs.
+
+Learning check, A-s-wfull-s0, affine + raw+asinh, 3000 steps, mps (training 516 s, eval 60 s).
+Prior set, h = 1, vs bayes: **excess_mse_pct 0.719** (gap -0.0006, kappa +0.0048);
+trajectory 78.86 (100), 5.21 (300), 1.42 (1000), 0.72 (3000).
+
+Step 3000, h = 1, bench bayes:
+
+| rho   | gap     | excess_mse_pct |
+|-------|---------|----------------|
+| 0.0   | +0.0747 | 2.519          |
+| 0.2   | +0.0337 | 0.295          |
+| 0.4   | -0.0162 | 0.097          |
+| 0.6   | -0.0285 | 0.960          |
+| 0.8   | -0.0064 | 1.015          |
+| 1.0   | -0.0029 | 1.410          |
+| prior | -0.0006 | 0.719          |

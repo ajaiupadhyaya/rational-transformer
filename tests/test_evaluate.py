@@ -201,22 +201,22 @@ def test_affine_head_respects_window_in_model_forecasts():
 @pytest.mark.parametrize("window", [None, 4])
 def test_non_default_variant_checkpoint_evaluates_with_that_variant(tmp_path, window):
     import torch
-    train = _tiny_cfg(max_steps=20, checkpoints=[20], head="affine", inputs="raw+asinh")
+    train = _tiny_cfg(max_steps=20, checkpoints=[20], head="linear", inputs="raw")
     cell = Cell("A", "xs", window, 0)
     train_cell(cell, train, tmp_path / "ck", "cpu")
     path = tmp_path / "ck" / cell.id / "step20.pt"
     model, saved = ev._load_model(cell, path)
-    assert (model.head_kind, model.inputs_kind) == ("affine", "raw+asinh")
-    assert saved["head"] == "affine" and saved["inputs"] == "raw+asinh"
+    assert (model.head_kind, model.inputs_kind) == ("linear", "raw")
+    assert saved["head"] == "linear" and saved["inputs"] == "raw"
     # the same forecasts as a model built by hand from the variant
-    by_hand = Forecaster(*SIZES["xs"], head="affine", inputs="raw+asinh")
+    by_hand = Forecaster(*SIZES["xs"], head="linear", inputs="raw")
     by_hand.load_state_dict(torch.load(path, weights_only=True)["model"])
     b = sample_family_a(6, np.random.default_rng(2))
     assert np.allclose(model_forecasts(model, b.x, window, "cpu"),
                        model_forecasts(by_hand, b.x, window, "cpu"), equal_nan=True)
     # evaluation with the DEFAULT evaluation config still uses the checkpoint's variant
     ev_cfg = _tiny_cfg(eval_n_per_rho=50, eval_n_prior=50)
-    assert ev_cfg["head"] == "linear"
+    assert ev_cfg["head"] == "affine"
     df = evaluate_cell(cell, 20, ev_cfg, "cpu", ckpt_dir=tmp_path / "ck",
                        eval_dir=tmp_path / "eval")
     assert len(df) == 84 and df.excess_mse_pct.notna().all()

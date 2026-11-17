@@ -6,8 +6,8 @@ attended to by any other position, and its own output is meaningless (callers
 ignore it). So a left-padded window gives exactly the forecasts the unpadded
 window would.
 
-Two architecture options (config keys "head" and "inputs"; defaults are the original
-network):
+Two architecture options (config keys "head" and "inputs"; defaults are "affine" and
+"raw+asinh"; "linear" + "raw" is the original network):
 - head "linear": forecasts = head(ln_f(h)), 6 numbers per position.
   head "affine": head(ln_f(h)) gives 12 numbers per position, (a_h, b_h) for h = 1..6,
   and the forecast is a_h * x_t + b_h with x_t the raw value at that position (the last
@@ -57,7 +57,7 @@ class Block(nn.Module):
 
 class Forecaster(nn.Module):
     def __init__(self, n_layers: int, d_model: int, n_heads: int,
-                 head: str = "linear", inputs: str = "raw"):
+                 head: str = "affine", inputs: str = "raw+asinh"):
         super().__init__()
         assert d_model % n_heads == 0
         if head not in HEADS:

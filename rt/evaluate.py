@@ -42,11 +42,11 @@ from rt.bayes import bayes_a, bayes_b
 from rt.diagnostics import eor_b, excess_mse_pct, implied_persistence, kappa
 from rt.model import Forecaster
 from rt.sim import HORIZONS, RHOS, T_EVAL, Batch
-from rt.train import (SAMPLERS, T_MAX, Cell, _checkpoints, batch_from_x, build_model,
-                      load_cfg)
+from rt.train import (SAMPLERS, T_MAX, Cell, _atomic, _checkpoints, batch_from_x,
+                      build_model, load_cfg)
 
 ROOT = Path(__file__).resolve().parent.parent
-EVAL_DIR = ROOT / "results" / "eval"
+EVAL_DIR = Path(os.environ.get("RT_EVAL_DIR") or ROOT / "results" / "eval")
 CKPT_DIR = ROOT / "results" / "checkpoints"
 METRICS_DIR = ROOT / "results" / "metrics"
 
@@ -127,10 +127,11 @@ def _code_digest() -> bytes:
 
 
 def _save_atomic_npy(path: Path, arr: np.ndarray) -> None:
-    tmp = path.with_name(path.name + ".tmp")
-    with open(tmp, "wb") as fh:
-        np.save(fh, arr)
-    os.replace(tmp, path)
+    def write(p: Path) -> None:
+        with open(p, "wb") as fh:
+            np.save(fh, arr)
+
+    _atomic(path, write)
 
 
 def bench_forecasts(family: str, window: int | None, key: str, batch: Batch, *,
@@ -301,9 +302,7 @@ def evaluate_all(cell: Cell, cfg: dict, device, *, ckpt_dir=CKPT_DIR, out_dir=ME
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / f"{cell.id}.csv"
-    tmp = path.with_name(path.name + ".tmp")
-    out.to_csv(tmp, index=False)
-    os.replace(tmp, path)
+    _atomic(path, lambda p: out.to_csv(p, index=False))
     return out
 
 
