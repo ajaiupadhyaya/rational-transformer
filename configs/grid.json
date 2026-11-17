@@ -1,0 +1,25 @@
+{
+  "sizes": {"xs": [1, 32, 2], "s": [2, 64, 4], "m": [4, 128, 4], "l": [8, 256, 8]},
+  "windows": [2, 4, 8, 16, null],
+  "seeds": [0, 1, 2, 3, 4],
+  "t_max": 80,
+  "horizons": 6,
+  "optimizer": "adamw",
+  "lr": 0.001,
+  "weight_decay": 0.01,
+  "betas": [0.9, 0.999],
+  "warmup_steps": 500,
+  "schedule": "linear warmup then cosine to zero at max_steps",
+  "batch_size": 1024,
+  "max_steps": 30000,
+  "loss": "squared error summed over horizons; full window: mean over all 80 positions; window W: last position only",
+  "checkpoints": [100, 300, 1000, 3000, 10000, 30000],
+  "log_every": 50,
+  "eval_n_per_rho": 20000,
+  "eval_n_prior": 100000,
+  "convergence": {
+    "rule": "converged if evaluation squared error at step 30000 is within 0.1% of its value at step 10000",
+    "compare_steps": [10000, 30000],
+    "rel_tol": 0.001
+  }
+}
