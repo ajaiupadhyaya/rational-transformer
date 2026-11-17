@@ -6,7 +6,13 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 unset RT_CONFIG RT_EVAL_DIR
 LOG=results/mac_sweep.log
-on_ac() { pmset -g batt | grep -q "AC Power"; }
+# ALLOW_BATTERY_FLOOR=N (owner's one-off permission): also run on battery while charge > N%.
+on_ac() {
+  pmset -g batt | grep -q "AC Power" && return 0
+  [ -n "${ALLOW_BATTERY_FLOOR:-}" ] || return 1
+  pct=$(pmset -g batt | grep -o '[0-9]*%' | head -1 | tr -d %)
+  [ "${pct:-0}" -gt "$ALLOW_BATTERY_FLOOR" ]
+}
 remaining() { uv run python -m rt.sweep --device mps --only "$1" --dry-run 2>/dev/null | grep -c '^A-'; }
 for glob in 'A-xs-*' 'A-s-*'; do
   while [ "$(remaining "$glob")" -gt 0 ]; do
