@@ -252,3 +252,17 @@ section 10 the owner decided. Owner chose "Plan A" on 2026-11-17. No sweep resul
 Cloud order: A-l (25 cells), then A-m seeds 0-2 (15), then B-l full and w4 seeds 0-2 (6). Budget
 guard $11 for the sweep, leaving room under the $15 cap (pilot ~$0.71) for the training-length
 re-checks of section 6.
+
+## 2026-11-18: analysis rule for incomplete seed groups (before any real verdict was computed)
+
+PREREG section 6 makes the seed the unit and computes every verdict from "the five seeds" (three
+for size `m` under Plan A), but does not say what happens if a run fails or never finishes.
+Rule adopted for `analysis/` (implemented in `analysis/hypotheses.py`): a (family, size, window,
+step, rho, h, bench) group with fewer seeds than Plan A schedules is **incomplete**; its numbers
+are printed and marked "incomplete", and it never enters a decision. A hypothesis that needs an
+incomplete or missing group is "not established", unless a complete group already rejects it.
+Reason: a verdict from a subset of seeds would be a different test from the one registered, and
+which seeds fail is not random with respect to training difficulty. Cost: four seeds that all
+show a difference read "not established" instead of "rejected"; the four seed values are still
+printed. Decided on 2026-11-18 by the controller, with the independent reviewer's concurrence,
+before `analysis.report` had been run on any real metrics.
