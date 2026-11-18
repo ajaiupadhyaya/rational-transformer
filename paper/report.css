@@ -1,0 +1,133 @@
+/* esnupi publications — shared print stylesheet for every project report.
+   Mirrors /publications: Klein blue on white paper, Archivo Black display,
+   Courier New metadata. Body is Charter for long-form reading. */
+
+@font-face { font-family: "Portfolio Grotesk"; src: url("fonts/archivo-black.ttf") format("truetype"); font-weight: 900; }
+
+:root {
+  --blue: #153bfa;
+  --ink: #111318;
+  --muted: #5a5f6b;
+  --rule: #c9ccd4;
+  --wash: #eef1ff;
+  --display: "Portfolio Grotesk", "Arial Black", sans-serif;
+  --sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --serif: Charter, "Iowan Old Style", Georgia, serif;
+  --mono: "Courier New", Courier, monospace;
+}
+
+@page {
+  size: letter;
+  margin: 0.85in 0.95in 0.9in 0.95in;
+  @top-left { content: var(--running-title, ""); font: 7.5pt/1 var(--mono); color: var(--muted); letter-spacing: .04em; text-transform: uppercase; vertical-align: bottom; padding-bottom: 14pt; }
+  @top-right { content: "esnupi \00B7  Publications"; font: 7.5pt/1 var(--mono); color: var(--muted); letter-spacing: .04em; text-transform: uppercase; vertical-align: bottom; padding-bottom: 14pt; }
+  @bottom-right { content: counter(page); font: 8pt/1 var(--mono); color: var(--blue); vertical-align: top; padding-top: 16pt; }
+}
+@page cover {
+  margin: 0;
+  @top-left { content: none; }
+  @top-right { content: none; }
+  @bottom-right { content: none; }
+}
+
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin: 0; color: var(--ink); font: 10.25pt/1.5 var(--serif); font-variant-numeric: oldstyle-nums proportional-nums; hyphens: auto; orphans: 3; widows: 3; }
+
+/* ── Cover ─────────────────────────────────────────────────────────────── */
+.cover { page: cover; break-after: page; position: relative; display: flex; flex-direction: column; width: 8.5in; height: 11in; padding: 0.8in 0.85in 0.75in; color: var(--blue); }
+.cover__kicker, .cover__meta, .cover__foot { font: 8.5pt/1.5 var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+.cover__kicker { display: flex; justify-content: space-between; padding-bottom: 10pt; border-bottom: 1.25pt solid var(--blue); }
+.cover__title { margin: 1.35in 0 0; color: var(--blue); font: 900 46pt/0.98 var(--display); letter-spacing: -0.045em; text-wrap: balance; }
+.cover__title.long { font-size: 38pt; }
+.cover__subtitle { max-width: 5.6in; margin: 22pt 0 0; font: 13pt/1.4 var(--sans); color: var(--ink); text-wrap: pretty; }
+.cover__byline { margin-top: 26pt; font: 9pt/1.5 var(--mono); letter-spacing: .04em; }
+.cover__abstract { margin-top: auto; padding-top: 14pt; border-top: 0.75pt solid var(--blue); max-width: 6.3in; font: 9.5pt/1.5 var(--serif); color: var(--ink); }
+.cover__abstract strong { font: 8pt/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--blue); margin-right: 6pt; }
+.cover__foot { display: flex; justify-content: space-between; margin-top: 22pt; }
+.cover__block { position: absolute; right: 0.85in; top: 1.3in; width: 0.62in; height: 0.62in; background: var(--blue); }
+
+/* ── Headings ──────────────────────────────────────────────────────────── */
+h1, h2, h3, h4 { break-after: avoid; break-inside: avoid; color: var(--ink); }
+h2 { margin: 26pt 0 8pt; font: 900 17pt/1.12 var(--display); letter-spacing: -0.03em; }
+h2 .n { display: block; margin-bottom: 5pt; font: 8pt/1 var(--mono); letter-spacing: .06em; color: var(--blue); }
+h3 { margin: 16pt 0 4pt; font: 700 10.5pt/1.3 var(--sans); }
+h2 + h3 { margin-top: 6pt; }
+section.major { break-before: page; }
+section.major > h2:first-child { margin-top: 0; }
+
+p { margin: 0 0 7pt; text-wrap: pretty; }
+a { color: var(--blue); text-decoration: none; }
+strong { font-weight: 700; }
+em { font-style: italic; }
+ul, ol { margin: 0 0 8pt; padding-left: 15pt; }
+li { margin-bottom: 3pt; }
+li::marker { color: var(--blue); }
+code, .mono { font: 8.6pt/1.4 var(--mono); }
+sup { font-size: 70%; line-height: 0; }
+.lede { font: 12pt/1.5 var(--serif); margin-bottom: 12pt; }
+
+/* ── Key findings ──────────────────────────────────────────────────────── */
+.findings { margin: 14pt 0 16pt; padding: 12pt 14pt 6pt; background: var(--wash); border-top: 2pt solid var(--blue); break-inside: avoid; }
+.findings h3 { margin: 0 0 7pt; font: 8pt/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--blue); }
+.findings ol { padding-left: 16pt; }
+.findings li { margin-bottom: 5pt; }
+
+/* ── Stat row ──────────────────────────────────────────────────────────── */
+.stats { display: grid; grid-template-columns: repeat(var(--cols, 4), 1fr); gap: 0; margin: 12pt 0 16pt; border-top: 0.75pt solid var(--ink); border-bottom: 0.75pt solid var(--rule); break-inside: avoid; }
+.stat { padding: 9pt 10pt 9pt 0; }
+.stat + .stat { padding-left: 10pt; border-left: 0.5pt solid var(--rule); }
+.stat__value { font: 900 19pt/1.05 var(--display); letter-spacing: -0.03em; color: var(--blue); font-variant-numeric: lining-nums tabular-nums; }
+.stat__label { margin-top: 4pt; font: 7.5pt/1.35 var(--sans); color: var(--muted); }
+
+/* ── Figures ───────────────────────────────────────────────────────────── */
+figure { margin: 12pt 0 14pt; break-inside: avoid; }
+figure img, figure svg { display: block; width: 100%; height: auto; }
+figure.narrow img { width: 78%; margin: 0 auto; }
+figure.bordered img { border: 0.5pt solid var(--rule); }
+figcaption { margin-top: 6pt; font: 8pt/1.4 var(--sans); color: var(--muted); }
+figcaption b { color: var(--ink); font-weight: 700; }
+figcaption .src { display: block; margin-top: 2pt; font: 7pt/1.4 var(--mono); }
+.fig-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12pt; }
+
+/* ── Tables ────────────────────────────────────────────────────────────── */
+.table-wrap { margin: 10pt 0 14pt; break-inside: avoid; }
+table { width: 100%; border-collapse: collapse; font: 8.4pt/1.35 var(--sans); font-variant-numeric: lining-nums tabular-nums; }
+caption { caption-side: top; text-align: left; padding-bottom: 5pt; font: 8pt/1.4 var(--sans); color: var(--muted); }
+caption b { color: var(--ink); }
+thead th { padding: 0 6pt 4pt 0; border-bottom: 0.75pt solid var(--ink); font-weight: 700; text-align: left; vertical-align: bottom; }
+tbody td { padding: 3.5pt 6pt 3.5pt 0; border-bottom: 0.5pt solid var(--rule); vertical-align: top; }
+tbody tr:last-child td { border-bottom: 0.75pt solid var(--ink); }
+td.num, th.num { text-align: right; }
+tr.hl td { background: var(--wash); }
+.table-note { margin-top: 4pt; font: 7pt/1.4 var(--mono); color: var(--muted); }
+
+/* ── Callouts, equations ───────────────────────────────────────────────── */
+.note { margin: 10pt 0 12pt; padding: 8pt 12pt; border-left: 2pt solid var(--blue); font: 9pt/1.45 var(--sans); break-inside: avoid; }
+.note b { font: 7.5pt/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--blue); display: block; margin-bottom: 4pt; }
+.eq { margin: 8pt 0 10pt; padding: 6pt 0; text-align: center; font: italic 10.5pt/1.5 var(--serif); }
+.eq .lbl { float: right; font: normal 8pt/2 var(--mono); color: var(--muted); }
+
+/* ── Appendix / colophon ───────────────────────────────────────────────── */
+.appendix { font-size: 9pt; }
+.appendix dl { display: grid; grid-template-columns: 1.45in 1fr; gap: 4pt 12pt; margin: 6pt 0 12pt; font: 8.2pt/1.45 var(--sans); }
+.appendix dt { font: 7.5pt/1.6 var(--mono); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.appendix dd { margin: 0; }
+.colophon { margin-top: 22pt; padding-top: 8pt; border-top: 0.75pt solid var(--blue); font: 7.5pt/1.5 var(--mono); color: var(--muted); }
+
+/* ── Technical briefs (software) ───────────────────────────────────────── */
+/* Screenshot rows: phone captures 3–4 up, desktop captures 1–2 up. */
+.shots { display: grid; grid-template-columns: repeat(var(--cols, 3), 1fr); gap: 10pt; margin: 12pt 0 6pt; align-items: start; break-inside: avoid; }
+.shots img { display: block; width: 100%; height: auto; border: 0.5pt solid var(--rule); }
+.shots.phone img { border-radius: 9pt; }
+.shots + figcaption, figure .shots + figcaption { margin-top: 6pt; }
+/* Architecture diagrams drawn in HTML: boxes in a row with arrows between. */
+.arch { display: flex; align-items: stretch; gap: 0; margin: 12pt 0 6pt; font: 7.6pt/1.35 var(--sans); break-inside: avoid; }
+.arch__box { flex: 1; padding: 7pt 8pt; border: 0.75pt solid var(--ink); background: #fff; }
+.arch__box b { display: block; margin-bottom: 3pt; font: 900 9pt/1.1 var(--display); letter-spacing: -0.02em; color: var(--blue); }
+.arch__box.hl { background: var(--wash); border-color: var(--blue); }
+.arch__arrow { flex: 0 0 16pt; align-self: center; text-align: center; color: var(--blue); font: 11pt/1 var(--sans); }
+/* Two-column definition list for "built with" / spec summaries. */
+.spec { display: grid; grid-template-columns: 1.3in 1fr; gap: 3pt 12pt; margin: 8pt 0 12pt; font: 8.4pt/1.45 var(--sans); break-inside: avoid; }
+.spec dt { font: 7.5pt/1.7 var(--mono); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.spec dd { margin: 0; }

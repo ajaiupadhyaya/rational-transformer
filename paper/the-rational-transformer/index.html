@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Rational Transformer — Ajai Upadhyaya</title>
+<meta name="author" content="Ajai Upadhyaya">
+<meta name="description" content="Small transformers trained only to minimise forecast error on AR(1) data, measured against exact Bayes forecasters that hold the same information.">
+<link rel="stylesheet" href="../report.css">
+<style>
+  :root { --running-title: "The Rational Transformer"; }
+  td.c { white-space: nowrap; }
+  /* DRAFT ONLY: every .pending span is filled from RESULTS.md before the PDF is built. */
+  .pending { background: #fff2b3; font-family: var(--mono); font-size: 8.5pt; padding: 0 2pt; }
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <div class="cover__block"></div>
+  <div class="cover__kicker"><span>Report · Esn-00XX</span><span>November 2026</span></div>
+  <h1 class="cover__title">The Rational Transformer</h1>
+  <p class="cover__subtitle">Small transformers trained only to minimise forecast error on autoregressive data, measured against exact Bayes forecasters that see exactly what the network sees.</p>
+  <div class="cover__byline">Ajai Upadhyaya</div>
+  <p class="cover__abstract"><strong>Abstract</strong>Human forecasters overreact to news, and more so when the series is less persistent. A rational forecaster who has to learn persistence also departs from the truth at any fixed persistence, because its estimate is pulled toward the prior. So a deviation from the full-information forecast is not evidence of a bias. We train causal transformers from scratch on AR(1) sequences with persistence drawn from U[0, 1], at four sizes and five memory lengths, and compare each with the exact Bayes forecaster that holds the same prior and the same window of data. Hypotheses, margins and decision rules were frozen in a tagged pre-registration before any confirmatory run. <span class="pending">[results sentence: H1, H2 by window, H3 count; from RESULTS.md]</span></p>
+  <div class="cover__foot"><span>esnupi · Publications · No. XX</span><span>ajaiupadhyaya.com/publications</span></div>
+</section>
+
+<section>
+  <h2><span class="n">01</span>Summary</h2>
+  <p class="lede">When a network trained on nothing but squared error forecasts a time series, is what it does wrong a bias, or just the information it lacks? Here the right answer is known exactly, so the two can be told apart.</p>
+
+  <div class="stats" style="--cols:4">
+    <div class="stat"><div class="stat__value"><span class="pending">[ ]</span></div><div class="stat__label">H1: largest model, full memory, against Bayes</div></div>
+    <div class="stat"><div class="stat__value"><span class="pending">[ ]</span></div><div class="stat__label">H2: windows equivalent to window-Bayes, of 4</div></div>
+    <div class="stat"><div class="stat__value"><span class="pending">[ ]</span></div><div class="stat__label">H3: overreaction where window-Bayes underreacts, of 8</div></div>
+    <div class="stat"><div class="stat__value"><span class="pending">[ ]</span></div><div class="stat__label">GPU-hours on one RTX A6000 (cost $<span class="pending">[ ]</span>)</div></div>
+  </div>
+
+  <div class="findings">
+    <h3>Key findings</h3>
+    <ol>
+      <li><span class="pending">[H1 with numbers]</span></li>
+      <li><span class="pending">[H2 per window with numbers]</span></li>
+      <li><span class="pending">[H3 with count and adjusted interval]</span></li>
+      <li><span class="pending">[exploratory: training traces / size, labelled exploratory]</span></li>
+      <li><span class="pending">[human overlay, descriptive]</span></li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">02</span>Scope and grade of evidence</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Stream</th><th>Data</th><th>Grade</th><th>Supports</th></tr></thead>
+      <tbody>
+        <tr><td>H1–H3</td><td>Simulated AR(1), Family A; size l, 5 seeds per cell</td><td>Confirmatory: pre-registered rows, margins and rules (tag <span class="mono">prereg-v1</span>, deviations to <span class="mono">v1.2</span>)</td><td>Findings 1–3</td></tr>
+        <tr><td>Other sizes</td><td>Family A, sizes xs, s (5 seeds), m (3 seeds)</td><td>Reported in the same tables; never enter a decision</td><td>Finding 4</td></tr>
+        <tr><td>Training traces</td><td>Checkpoints at 3,000, 10,000 and 30,000 steps</td><td>Exploratory</td><td>Finding 4</td></tr>
+        <tr><td>Human overlay</td><td>Family B (unknown mean and scale), size l, windows full and 4, 3 seeds; AKLMT Experiment 1</td><td>Descriptive; different data for humans and models</td><td>Finding 5</td></tr>
+        <tr><td>Survey comparison</td><td>SPF and real-time data, Philadelphia Fed</td><td>Illustrative; the models never saw real series, and real series are not AR(1)</td><td>Section 09</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="major">
+  <h2><span class="n">03</span>Why a Bayesian looks biased</h2>
+  <p>Afrouzi, Kwon, Landier, Ma and Thesmar (2023) showed people AR(1) series with persistence ρ fixed per subject and asked for forecasts. Regressing a forecast on the current value gives an implied persistence. People's implied persistence sits above ρ for every ρ below one, by more when ρ is low: they overreact, and overreact most to the least persistent series.</p>
+  <p>A forecaster who does not know ρ and learns it from the data is not unbiased at a fixed ρ. Its posterior is pulled toward the prior, so its implied persistence is above ρ when ρ is low and below it when ρ is high. Part of the human pattern, "more overreaction when persistence is low", is therefore what a rational learner does anyway. A forecaster that sees only the last W observations is pulled harder, because it has less data. The informative comparison is not with the truth but with the Bayes forecaster that holds the same prior and the same information. Where people part from that benchmark is at high persistence: there the Bayesian underreacts and people still overreact.</p>
+  <p>That gives the sharp question. Does a network trained only on squared error ever overreact where the matching Bayesian underreacts, at ρ = 0.6 and 0.8? Rational learning cannot produce that.</p>
+</section>
+
+<section>
+  <h2><span class="n">04</span>Setup</h2>
+  <h3>Data</h3>
+  <p><strong>Family A</strong> (every hypothesis): x<sub>0</sub> = 0, x<sub>t</sub> = ρ x<sub>t−1</sub> + ε<sub>t</sub>, ε<sub>t</sub> ~ N(0, 1), with ρ ~ U[0, 1] drawn once per sequence. Mean and noise scale are known. <strong>Family B</strong> (descriptive): the same process around an unknown mean μ with unknown scale σ, σ² ~ InvGamma(3, 2) and μ | σ² ~ N(0, 25σ²). Sequences run 80 steps; forecasts are scored at steps 41–80, as AKLMT scored their subjects, for horizons 1 to 6.</p>
+  <h3>Models</h3>
+  <p>Pre-LayerNorm causal transformers over real-valued inputs, at four sizes (1 layer, width 32; 2/64; 4/128; 8/256). Each position embeds [x, asinh x] and its true time index. The output head gives, per horizon, a slope and an intercept, and the forecast is a<sub>h</sub>·x<sub>t</sub> + b<sub>h</sub>. A memory length W ∈ {2, 4, 8, 16, full} is a hard information limit: the input is cut to the last W observations, so a deep network cannot see further back than W. AdamW, learning rate 10<sup>−3</sup> with 500 warm-up steps and a cosine decay to zero, batch 1,024, 30,000 steps.</p>
+  <h3>Benchmarks, all exact</h3>
+  <p><strong>Full information</strong>: ρ<sup>h</sup>x<sub>t</sub> with the true ρ. <strong>Bayes</strong>: the posterior over ρ from a 2,001-point grid under the training prior, forecast E[ρ<sup>h</sup> | data]·x<sub>t</sub>. <strong>Window-Bayes</strong>: the same from the last W observations and the time index, including the likelihood of the first observation in the window given (ρ, t); it is the best any forecaster with that information can do. A least-squares learner is kept for continuity with earlier work.</p>
+</section>
+
+<section>
+  <h2><span class="n">05</span>Pre-registered decision rules</h2>
+  <p>Seeds are the unit. For each cell the seed mean gets a 95% Student-t interval. A model is <em>equivalent</em> to its benchmark if the whole interval lies inside a margin fixed in advance: ±1 percentage point of excess squared error and ±0.02 of implied-persistence gap. It is <em>different</em> if the interval lies wholly outside, and <em>inconclusive</em> otherwise.</p>
+  <ul>
+    <li><strong>H1</strong>, close to a replication of Balim et al. (2023) and Akram and Vikalo (2024): the largest model with full memory is equivalent to Bayes at every grid ρ, on both columns (12 verdicts).</li>
+    <li><strong>H2</strong>: for each W below full, separately, the largest model is equivalent to window-Bayes at every grid ρ. If so, everything it gets "wrong" is the information limit.</li>
+    <li><strong>H3</strong>: at ρ = 0.6 and 0.8, the gap against window-Bayes is above +0.02 in at least one of eight window-ρ combinations, after a Bonferroni adjustment (99.375% interval).</li>
+  </ul>
+  <p>Any "different" finding at the largest size was to be re-trained at twice the length and counted only if it survived. A plateau test on the learning curve, in the first draft, would have marked nearly every run unconverged under a learning rate that decays to zero, and was replaced before the freeze.</p>
+</section>
+
+<section class="major">
+  <h2><span class="n">06</span>Pre-registered results</h2>
+  <p><span class="pending">[H1 table and verdicts from RESULTS.md]</span></p>
+  <p><span class="pending">[Figure 1: gap against window-Bayes by window and ρ, size l; figures/fig1_gap_map]</span></p>
+  <p><span class="pending">[H2 per window; H3 table with k of 8 at 95% and after adjustment; training-length outcomes]</span></p>
+</section>
+
+<section>
+  <h2><span class="n">07</span>Exploratory results</h2>
+  <p><span class="pending">[training traces fig3; size profile fig4; other sizes' H2/H3 counts; ρ = 0 behaviour; horizons above 1]</span></p>
+</section>
+
+<section>
+  <h2><span class="n">08</span>The human overlay</h2>
+  <p><span class="pending">[Figure 2 and text]</span> The overlay compares curves, not data: people forecast AKLMT's series, the networks forecast simulated Family B series. Implied persistence is a slope and does not change when a series is rescaled, so the comparison survives the difference in units. AKLMT's innovations have a standard deviation of about 20 in raw units, far outside the Family B prior for σ; that matters only for feeding raw human series to the networks, which this report does not do.</p>
+</section>
+
+<section>
+  <h2><span class="n">09</span>An illustrative look at professional forecasters</h2>
+  <p><span class="pending">[SPF table, or the statement that the arm was dropped and why]</span></p>
+</section>
+
+<section class="major">
+  <h2><span class="n">10</span>Limits and deviations</h2>
+  <ul>
+    <li><strong>One architecture.</strong> The confirmatory claims are about this network. Before the freeze, a probe at one seed of the small model showed that a linear output head reading a LayerNorm output could not scale its forecast with x<sub>t</sub> (148% excess error at ρ = 1); the slope-and-intercept head removed that. The choice was made on that failure at ρ = 1, not on the sign of any gap at 0.6–0.8, and is disclosed with the numbers seen.</li>
+    <li><strong>Budget cuts (tag <span class="mono">prereg-v1.1</span>).</strong> A pilot on the rented GPU projected the configured grid at about 57 GPU-hours against a $12 cap. Before any confirmatory run: three checkpoints instead of six; TF32 matrix multiplies and one CPU thread per process on the GPU; sizes xs and s trained on a laptop; size m at three seeds; Family B at two windows and three seeds. The largest size in Family A, on which every hypothesis rests, was not cut.</li>
+    <li><strong>Incomplete cells (tag <span class="mono">prereg-v1.2</span>).</strong> A cell with fewer seeds than scheduled never decides a hypothesis; its numbers are printed and marked.</li>
+    <li><strong>Simulated evidence.</strong> Every confirmatory claim is about networks trained and tested on AR(1) data. Nothing here says how a large language model or a person behaves.</li>
+    <li><span class="pending">[anything the results add]</span></li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="n">11</span>Related work</h2>
+  <p>Transformers trained across many linear systems approach Kalman accuracy in squared error (Balim, Du, Oymak and Ozay 2023; Akram and Vikalo 2024), and one analysis argues attention fits a fixed-window autoregression rather than recovering the system (Vlădărean, Zhang and Sra, ICLR 2026). Raventós, Paul, Chen and Ganguli (2023) find networks behave like the Bayes estimator for their pretraining prior in i.i.d. regression below a task-diversity threshold. The closest design is Acero (ICAIF 2026), who trains GPT-style models on a limit-order-book simulator and finds the learned predictive matches exact Bayes in log loss; it does not measure forecast slopes or revisions, and has no information-matched benchmark. On the expectations side, Frank, Gao and Yang (2023) show that optimally regularised forecasters fail forecast-efficiency tests against full information; this report makes the comparison against a Bayesian with the same information exact.</p>
+</section>
+
+<section>
+  <h2><span class="n">12</span>References</h2>
+  <ul class="refs">
+    <li>Acero <span class="pending">[verify initials]</span> (2026). What do foundation models for market microstructure learn? A controlled study with synthetic limit order books. ICAIF 2026. doi:10.1145/3858063.3858749</li>
+    <li>Afrouzi, H., Kwon, S. Y., Landier, A., Ma, Y., Thesmar, D. (2023). Overreaction in expectations: evidence and theory. <em>Quarterly Journal of Economics</em> 138(3). doi:10.1093/qje/qjad009</li>
+    <li>Akram <span class="pending">[verify initials]</span>, Vikalo, H. (2024). Transformers as implicit state estimators: in-context learning in dynamical systems. arXiv:2410.16546</li>
+    <li>Balim, H., Du, Z., Oymak, S., Ozay, N. (2023). Can transformers learn optimal filtering for unknown systems? arXiv:2308.08536</li>
+    <li>Bordalo, P., Gennaioli, N., Ma, Y., Shleifer, A. (2020). Overreaction in macroeconomic expectations. <em>American Economic Review</em> 110(9). doi:10.1257/aer.20181219</li>
+    <li>Coibion, O., Gorodnichenko, Y. (2015). Information rigidity and the expectations formation process. <em>American Economic Review</em> 105(8). doi:10.1257/aer.20110306</li>
+    <li>Frank, M., Gao <span class="pending">[verify initials]</span>, Yang <span class="pending">[verify initials]</span> (2023). Behavioral machine learning? Regularization and forecast bias. arXiv:2303.16158</li>
+    <li>Raventós, A., Paul, M., Chen, F., Ganguli, S. (2023). Pretraining task diversity and the emergence of non-Bayesian in-context learning for regression. arXiv:2306.15063</li>
+    <li>Vlădărean <span class="pending">[verify initials]</span>, Zhang <span class="pending">[verify initials]</span>, Sra, S. (2026). On learning linear dynamical systems in context with attention layers. ICLR 2026.</li>
+  </ul>
+</section>
+
+</body>
+</html>
