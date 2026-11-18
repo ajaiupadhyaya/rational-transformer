@@ -266,3 +266,29 @@ which seeds fail is not random with respect to training difficulty. Cost: four s
 show a difference read "not established" instead of "rejected"; the four seed values are still
 printed. Decided on 2026-11-18 by the controller, with the independent reviewer's concurrence,
 before `analysis.report` had been run on any real metrics.
+
+## 2026-11-17: Survey comparison conventions (Task 11; exploratory, PREREG section 8)
+
+Fixed before any Family B checkpoint exists or is loaded. Code: `analysis/spf.py`; data:
+`data/spf_panel.parquet` (provenance in `data/PROVENANCE.md`).
+
+- Variables and sample: EWH's headline SPF replication set and window (NGDP, RGDP, PGDP, CPI,
+  UNEMP, TB3M, TN10Y; 1968Q4-2016Q4), consensus = mean of individual errors and revisions.
+- Series fed to the models: first differences of the real-time levels of vintage t -- the
+  annualised quarterly percent growth rate for NGDP, RGDP, PGDP and CPI, the change for UNEMP,
+  TB3M and TN10Y -- standardised by their mean and standard deviation over every observation
+  dated before t. Forecasts are mapped back by loc + scale * F.
+- Horizons: the survey target is quarter t+3 (growth from x[t-1] for growth variables). The
+  model's last input is d[t-1], so the forecast at t uses horizons 1-4 and the t-1 forecast
+  (made from vintage t-1) horizons 2-5 (growth, compounded) or 1-5 (levels, summed onto
+  x[t-2]). All within the models' 1-6: horizons match.
+- Context: the full-window model gets the last 80 scaled values (its trained context) with time
+  indices 1..n; window 4 gets the last 4 with indices 77..80.
+- Drop rule range: the central 99% of standardised Family B training values (x - mu) / sigma,
+  t = 1..80, rho ~ U[0, 1] (100,000 simulated paths, seed (30000, 0x5BF)): about [-5.72, 5.79].
+  A variable-quarter is out of range if any fed value is outside it (or it cannot be scaled);
+  the fraction is pooled over variables, per Family B window, over variable-quarters with a
+  survey error and revision. On the real panel (no model involved): 93.2% in range for the full
+  window (all 77 misses are TB3M, 1981Q4-2000Q4: the 1980Q2 and 1980Q4 changes in the 3-month
+  bill rate reach 6.9 sd and stay in the last 80 values), 99.9% for window 4 (1 miss: TB3M
+  1981Q4). The drop rule does not fire.
