@@ -227,6 +227,17 @@ def _h2_table(blocks: dict[str, dict]) -> str:
                    "verdict", "seed values"], rows)
 
 
+def _key_label(k: str) -> str:
+    return f"H2 window {k[4:]}" if k.startswith("h2_w") else k.upper()
+
+
+def _decision_line(label: str, decision: str, resolved: str | None) -> str:
+    if resolved is None:
+        return f"**{label}: {DECISION_TEXT[decision]}.**"
+    return (f"**{label} after the training-length check: {DECISION_TEXT.get(resolved, resolved)}.** "
+            f"(Decision at 30,000 steps: {DECISION_TEXT[decision]}.)")
+
+
 def render(summary: pd.DataFrame, H: dict, metrics_label: str) -> str:
     h1, h2, h3 = H["h1"], H["h2"], H["h3"]
     prior = H["prior_rows"]
@@ -251,7 +262,7 @@ def render(summary: pd.DataFrame, H: dict, metrics_label: str) -> str:
     w("")
     w(f"Rows: family A, size {h2['primary_size']}, full window, benchmark bayes, h = 1, step 30000.")
     w("")
-    w(f"**Decision: {DECISION_TEXT[h1['decision']]}.**")
+    w(_decision_line("Decision", h1["decision"], H.get("resolved_decisions", {}).get("h1")))
     w("")
     w(_table(["rho", "column", "n seeds", "mean", "sd", "lo (95%)", "hi (95%)", "verdict",
               "seed values"], [[r["rho"], r["column"], *_row_cells(r)] for r in h1["rows"]]))
@@ -270,7 +281,8 @@ def render(summary: pd.DataFrame, H: dict, metrics_label: str) -> str:
         w("")
         w(f"### Window {win}")
         w("")
-        w(f"**Decision (size {h2['primary_size']}): {DECISION_TEXT[blk['decision']]}.**")
+        w(_decision_line(f"Decision (size {h2['primary_size']})", blk["decision"],
+                         H.get("resolved_decisions", {}).get(f"h2_w{win}")))
         w("")
         blocks = {h2["primary_size"]: blk, **{s: h2["other_sizes"][s][win] for s in h2["other_sizes"]}}
         w(_h2_table(blocks))
@@ -289,27 +301,32 @@ def render(summary: pd.DataFrame, H: dict, metrics_label: str) -> str:
       f"{h3['bonferroni_t_n5']:.3f} sd / sqrt(n) (n = 5) is above +0.02. The denominator is "
       f"always {h3['denominator']}.")
     w("")
-    w(f"**Decision: {DECISION_TEXT[h3['decision']]}.** {h3['statement']}.")
+    w(_decision_line("Decision", h3["decision"], H.get("resolved_decisions", {}).get("h3"))
+      + f" {h3['statement']}.")
     w("")
     rows = []
     for c in h3["combos"]:
         if c["status"] == "not run":
             rows.append([c["window"], c["rho"], "-", "-", "-", "-", "-", "not run", "-", "-"])
             continue
+        if c["status"] == "ok":
+            p95, padj = ("yes" if c["positive_95"] else "no"), ("yes" if c["positive_adjusted"] else "no")
+        else:
+            p95 = padj = f"incomplete ({c['n_seeds']} of {c['expected_seeds']} seeds; not used)"
         rows.append([c["window"], c["rho"], str(c["n_seeds"]), f4(c["mean"]), f4(c["sd"], False),
-                     f4(c["lo"]), f4(c["lo_adj"]),
-                     "yes" if c["positive_95"] else "no",
-                     "yes" if c["positive_adjusted"] else "no", _vals(c["values"])])
+                     f4(c["lo"]), f4(c["lo_adj"]), p95, padj, _vals(c["values"])])
     w(_table(["window", "rho", "n seeds", "mean", "sd", "lo (95%)", "lo (adjusted)",
               "positive at 95%", "positive after adjustment", "seed values"], rows))
     w("")
     w("Other sizes (descriptive, positives at 95%):")
     w("")
-    w(_table(["size", "combinations present", "positive at 95%"],
-             [[s, str(o["n_present"]), str(o["k_positive_95"])] for s, o in h3["other_sizes"].items()]))
+    w(_table(["size", "combinations present", "not run or incomplete", "positive at 95%"],
+             [[s, str(o["n_present"]), str(o["n_missing"]), str(o["k_positive_95"])]
+              for s, o in h3["other_sizes"].items()]))
     w("")
+    n_miss_other = sum(o["n_missing"] for o in h3["other_sizes"].values())
     w(f"Across xs, s and m: {h3['other_sizes_k_positive_95']} of {h3['other_sizes_denominator']} "
-      "positive at 95%.")
+      f"positive at 95%; {n_miss_other} of {h3['other_sizes_denominator']} not run or incomplete.")
     w("")
     w("## Flagged findings and the training-length check")
     w("")
@@ -326,14 +343,27 @@ def render(summary: pd.DataFrame, H: dict, metrics_label: str) -> str:
             outcome = f.get("outcome", "awaiting the training-length check")
             if outcome == "not run":
                 outcome = "different at 30,000 steps; not tested for training length"
-            rows.append([f["hypothesis"], f["window"], f["rho"], f["column"], f["sign"],
-                         f4(f["mean"]), f4(f["lo"]), f4(f["hi"]), outcome, ", ".join(f["cells"])])
-        w(_table(["hypothesis", "window", "rho", "column", "sign", "mean", "lo (95%)", "hi (95%)",
-                  "status", "cells to re-train"], rows))
+            base = [f["hypothesis"], f["window"], f["rho"], f["column"], f["sign"],
+                    f4(f["mean"]), f4(f["lo"]), f4(f["hi"]), outcome]
+            if checked:
+                eq = "-" if f["hypothesis"] == "H3" else ("yes" if f["all_equivalent_at_60k"] else "no")
+                base += [str(f["n_60k"]) if f.get("n_60k") is not None else "-", f4(f["mean_60k"]),
+                         f4(f["lo_60k"]), f4(f["hi_60k"]), f.get("verdict_60k") or "-",
+                         f4(f["lo_adj_60k"]) if f["hypothesis"] == "H3" else "-", eq,
+                         _vals(f.get("values_60k"))]
+            rows.append(base + [", ".join(f["cells"])])
+        heads = ["hypothesis", "window", "rho", "column", "sign", "mean", "lo (95%)", "hi (95%)",
+                 "status"]
+        if checked:
+            heads += ["n seeds (60,000)", "mean (60,000)", "lo (60,000)", "hi (60,000)",
+                      "verdict (60,000)", "lo adjusted (60,000, H3)", "all 12 equivalent at 60,000",
+                      "seed values (60,000)"]
+        w(_table(heads + ["cells to re-train"], rows))
         if H.get("resolved_decisions"):
             w("")
             w("Decisions after the check: " + "; ".join(
-                f"{k}: {v if v in DECISION_TEXT else v}" for k, v in H["resolved_decisions"].items()) + ".")
+                f"{_key_label(k)}: {DECISION_TEXT.get(v, v)}" for k, v in H["resolved_decisions"].items()
+                if v is not None) + ".")
     w("")
     w("## Cells not run")
     w("")
@@ -357,6 +387,12 @@ def render(summary: pd.DataFrame, H: dict, metrics_label: str) -> str:
              [[c["family"], c["size"], str(c["window"]), str(c["n_runs"]), str(c["n_converged"]),
                str(c["expected_runs"]), "yes" if c["converged"] else "no"]
               for c in H["convergence_cells"]]))
+    w("")
+    w("Per run (steps present in the metrics file; converged flag):")
+    w("")
+    w(_table(["cell", "steps", "converged"],
+             [[r["cell_id"], ", ".join(str(x) for x in r["steps"]), "yes" if r["converged"] else "no"]
+              for r in H["runs"]]))
     w("")
     w("### Benchmarks only (family A, h = 1, implied persistence)")
     w("")
@@ -422,6 +458,7 @@ def run(metrics_dir, out_dir=ROOT, *, metrics_60k_dir=None, eval_dir=None, cfg=N
     runs = run_table(df)
     H["coverage"] = coverage(runs, cfg)
     H["convergence_cells"] = _records(convergence_cells(runs))
+    H["runs"] = _records(runs)
     if metrics_60k_dir is not None:
         checked = training_length_check(H["flagged"], summarise(load_metrics(metrics_60k_dir)))
         H["training_length_check"] = checked

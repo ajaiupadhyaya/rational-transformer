@@ -130,12 +130,15 @@ def hypotheses(summary: pd.DataFrame) -> dict:
     for s in OTHER_SIZES:
         cs = [_combo(idx, s, w, r) for w in H2_WINDOWS for r in H3_RHOS]
         other[s] = {"combos": cs, "n_present": sum(c["status"] == "ok" for c in cs),
-                    "k_positive_95": sum(c["positive_95"] for c in cs)}
+                    "k_positive_95": sum(c["positive_95"] for c in cs),
+                    "n_missing": sum(c["status"] != "ok" for c in cs)}
     h3 = {"primary_size": PRIMARY, "denominator": BONFERRONI_K, "combos": combos,
           "k_positive_95": k95, "k_positive_adjusted": kadj, "n_missing": n_missing,
           "bonferroni_t_n5": bonferroni_t(5), "decision": decision,
           "statement": (f"{k95} of {BONFERRONI_K} positive at 95%, "
-                        + (f"{kadj} after adjustment" if kadj else "none after adjustment")),
+                        + (f"{kadj} after adjustment" if kadj else "none after adjustment")
+                        + (f"; {n_missing} of {BONFERRONI_K} not run or incomplete"
+                           if n_missing else "")),
           "other_sizes": other,
           "other_sizes_k_positive_95": sum(o["k_positive_95"] for o in other.values()),
           "other_sizes_denominator": len(OTHER_SIZES) * BONFERRONI_K}
@@ -201,7 +204,7 @@ def training_length_check(flagged: list[dict], summary_60k: pd.DataFrame | None)
         rows60 = [idx.cell(PRIMARY, f["window"], f["bench"], rho, c, step=STEP_LONG)
                   for rho in GRID_RHOS for c in COLUMNS]
         all_eq = all(x["status"] == "ok" and x["verdict"] == "equivalent" for x in rows60)
-        out.append({**f, "outcome": outcome, "mean_60k": r.get("mean"), "lo_60k": r.get("lo"),
+        out.append({**f, "outcome": outcome, "n_60k": r.get("n_seeds"), "mean_60k": r.get("mean"), "lo_60k": r.get("lo"),
                     "hi_60k": r.get("hi"), "verdict_60k": r.get("verdict"),
                     "lo_adj_60k": r.get("lo_adj"), "values_60k": r.get("values"),
                     "all_equivalent_at_60k": bool(all_eq and f["hypothesis"] != "H3")})

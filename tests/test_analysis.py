@@ -434,3 +434,55 @@ def test_every_number_in_results_traces(tmp_path):
     assert H["h3"]["statement"] in text
     assert H["flagged"] and any(f["cells"][0] in text for f in H["flagged"])
     assert "awaiting the training-length check" in text
+
+
+# ---------------------------------------------------------------- report: 60k check and incomplete group
+
+def test_results_trace_60k_and_incomplete(tmp_path):
+    shift = lambda c, rho, col, b: (0.3 if col == "gap" and rho == "0.6" and b == "window_bayes"
+                                    and c.window in (2, 4) else None)
+    cells = [c for c in cells_l() if not (c.window == 2 and c.seed == 4)]
+    d = make_dir(tmp_path, "metrics", cells, value_fn=vfn(shift))
+    write_run(d, Cell("A", "l", 8, 0), converged=False)             # a non-converged run
+    d60 = long_dir(tmp_path, "m60", lambda c, rho, col, b: 0.3 if (c.window == 4 and col == "gap"
+                                                                  and rho == "0.6") else None, (4,))
+    out = tmp_path / "out"
+    H = report.run(d, out, metrics_60k_dir=d60, cfg=load_cfg(), aklmt_zip=tmp_path / "none.zip",
+                   benchmarks=False)
+    text = (out / "RESULTS.md").read_text()
+    num = re.compile(r"[+-]?\d+\.\d+")
+
+    def close(printed, value):
+        assert abs(float(printed) - value) <= 0.5e-4 + 1e-12, (printed, value)
+
+    # flagged table, with 60k columns
+    chk = {(f["hypothesis"], f["window"], f["rho"], f["column"]): f for f in H["training_length_check"]}
+    f = chk[("H2", "4", "0.6", "gap")]
+    assert f["outcome"] == "survives"
+    ln = [l for l in text.splitlines() if l.startswith("| H2 | 4 | 0.6 | gap | ")]
+    assert len(ln) == 1
+    c = [x.strip() for x in ln[0].strip("| ").split("|")]
+    close(c[5], f["mean"]); close(c[6], f["lo"]); close(c[7], f["hi"])
+    assert c[8] == "survives" and c[9] == str(f["n_60k"]) == "5"
+    close(c[10], f["mean_60k"]); close(c[11], f["lo_60k"]); close(c[12], f["hi_60k"])
+    assert c[13] == f["verdict_60k"] == "different" and c[14] == "-"
+    assert c[15] == "no"
+    for a, b in zip(num.findall(c[16]), f["values_60k"]):
+        close(a, b)
+    h3 = [l for l in text.splitlines() if l.startswith("| H3 | 4 | 0.6 | gap | ")][0]
+    close([x.strip() for x in h3.strip("| ").split("|")][14], chk[("H3", "4", "0.6", "gap")]["lo_adj_60k"])
+    # headlines carry the resolved decision and the 30k decision
+    assert "after the training-length check: departure from rational use of the window (survived" in text
+    assert "(Decision at 30,000 steps: departure from rational use of the window, pending" in text
+    assert "h2_w4" not in text and "H2 window 4: departure" in text and "departure_from_rational_use" not in text
+    assert "**Decision after the training-length check: supported." in text
+    # incomplete H3 combination is marked and counted
+    row = [l for l in text.splitlines() if l.startswith("| 2 | 0.6 | 4 | ")]
+    assert len(row) == 1 and row[0].count("incomplete (4 of 5 seeds; not used)") == 2
+    assert "not run or incomplete" in H["h3"]["statement"] and H["h3"]["statement"] in text
+    assert H["h3"]["n_missing"] > 0
+    # per-run convergence printed for every run
+    assert len(H["runs"]) == len(cells)
+    for r in H["runs"]:
+        assert f"| {r['cell_id']} | 3000, 10000, 30000 | {'yes' if r['converged'] else 'no'} |" in text
+    assert "| A-l-w8-s0 | 3000, 10000, 30000 | no |" in text
