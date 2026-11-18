@@ -22,11 +22,16 @@ One row per (variable, survey quarter t), headline variables of EWH's replicatio
                   at t-1 (BGMS's "f3q" error and revision)
     t             survey quarter, "YYYYQn"
     hist_first    quarter of the first element of `hist`, "YYYYQn"
-    hist          real-time levels available at survey t, one per quarter from hist_first to
-                  t-1 (vintage t; NaN where that vintage has no value), in SPF units
+    hist          real-time levels available at survey t: vintage t only, one per quarter
+                  from hist_first to t-1, NaN where vintage t has no value (x[t-1] is NaN when
+                  it was released late: 1996Q1 for NGDP, RGDP, PGDP), in SPF units. Empty when
+                  no vintage dated t exists (CPI before 1994Q3).
     hist_source   where `hist` comes from (file and vintage)
-    last_filled   True if x[t-1] was missing from vintage t (late release) and was taken from
-                  the next vintage that has it, at most two quarters later (EWH's rule)
+    hist_vintage  the vintage of `hist`, "YYYYQn": always t, or "" when there is none (FRED
+                  rates are not revised: their vintage t is the series cut to quarters < t)
+    last_filled   always False: a late x[t-1] is never filled from a later vintage (that would
+                  use a figure published after the survey deadline). Kept so that a panel
+                  built under a filling rule is refused by analysis/spf.py.
     outcome       realised target EWH uses for the errors (growth from the first vintage that
                   contains x[t+3]; FRED value for rates)
     cons_err      consensus error: mean over forecasters of EWH's individual errors (after
@@ -56,7 +61,7 @@ GROWTH_KIND = ("NGDP", "RGDP", "PGDP", "CPI")
 LEVEL_KIND = ("UNEMP", "TB3M", "TN10Y")
 TARGET = "t+3"
 PANEL_COLUMNS = (["variable", "kind", "target", "t", "hist_first", "hist", "hist_source",
-                  "last_filled", "outcome", "cons_err", "cons_rev", "n_pairs"]
+                  "hist_vintage", "last_filled", "outcome", "cons_err", "cons_rev", "n_pairs"]
                  + [f"spf_c{k}" for k in range(1, 7)] + ["ind_id", "ind_err", "ind_rev"])
 
 
@@ -77,8 +82,8 @@ def build_panel(source, variables) -> pd.DataFrame:
 
     pairs(var)     sampled individual pairs: ID, t (Period), fc, fc_prev, outcome, err, rev
     forecasts(var) trimmed raw forecasts: ID, yq (Period), c1..c6
-    history(var, t) -> (levels Series on a quarterly PeriodIndex ending at or before t-1,
-                        source text, last_filled flag)
+    history(var, t) -> (levels Series on a quarterly PeriodIndex, source text, vintage
+                        Period of those levels or None); only a vintage dated t is kept
     """
     rows = []
     for var in variables:
@@ -89,7 +94,9 @@ def build_panel(source, variables) -> pd.DataFrame:
         out = pairs.groupby("t")["outcome"].first()
         for t in sorted(pairs.t.unique()):
             p = pairs[(pairs.t == t) & pairs.err.notna() & pairs.rev.notna()]
-            levels, src, filled = source.history(var, t)
+            levels, src, vintage = source.history(var, t)
+            if vintage != t:                         # strict real time: vintage t or nothing
+                levels, vintage = levels.iloc[:0], None
             levels = levels[levels.index < t].dropna()
             if len(levels):
                 rng = pd.period_range(levels.index.min(), t - 1, freq="Q")
@@ -101,7 +108,8 @@ def build_panel(source, variables) -> pd.DataFrame:
             rows.append({
                 "variable": var, "kind": kind_of(var), "target": TARGET, "t": q(t),
                 "hist_first": first, "hist": [float(v) for v in hist], "hist_source": src,
-                "last_filled": bool(filled), "outcome": float(out.get(t, np.nan)),
+                "hist_vintage": q(vintage) if vintage is not None else "",
+                "last_filled": False, "outcome": float(out.get(t, np.nan)),
                 "cons_err": float(cons.err.get(t, np.nan)),
                 "cons_rev": float(cons.rev.get(t, np.nan)), "n_pairs": int(len(p)),
                 **{f"spf_c{k}": float(c[f"c{k}"]) for k in range(1, 7)},
@@ -109,6 +117,16 @@ def build_panel(source, variables) -> pd.DataFrame:
                 "ind_rev": [float(v) for v in p.rev],
             })
     return pd.DataFrame(rows, columns=PANEL_COLUMNS)
+
+
+def vintage_history(m: pd.DataFrame, t: pd.Period) -> tuple[pd.Series, pd.Period | None]:
+    """Levels of vintage t from an (observation x vintage) matrix, observations before t only;
+    (empty, None) if the matrix has no vintage dated t with data. A later vintage is never
+    used, and a late x[t-1] is never filled in."""
+    if t not in m.columns or not m[t].notna().any():
+        return pd.Series([], dtype=np.float64, index=pd.PeriodIndex([], freq="Q")), None
+    lv = m[t].dropna()
+    return lv[lv.index < t].sort_index(), t
 
 
 def write_panel(panel: pd.DataFrame, out: Path) -> None:
@@ -137,21 +155,11 @@ class EWHSource:
         if var in rt.FRED:
             s = rt.fred_quarterly(var)
             return (s[s.index < t], f"FRED {rt.FRED[var]} (EWH snapshot {rt.SNAPSHOT}; "
-                    "not revised), quarterly means", False)
-        m = rt.vintage_matrix(var)
-        v = rt.first_available_vintage(m, t)
-        lv = m[v].dropna()
-        lv = lv[lv.index < t]
-        src = f"RTDSM {rt.RTDSM[var][0]} vintage {q(v)}"
-        if v != t:
-            src += f" (first vintage with data at or after {q(t)}; observations before {q(t)})"
-        filled = False
-        if t - 1 not in lv.index:
-            x = rt.value(var, t - 1, t)
-            if np.isfinite(x):
-                lv = pd.concat([lv, pd.Series([x], index=pd.PeriodIndex([t - 1], freq="Q"))])
-                filled = True
-        return lv.sort_index(), src, filled
+                    "not revised), quarterly means before t", t)
+        lv, v = vintage_history(rt.vintage_matrix(var), t)
+        src = (f"RTDSM {rt.RTDSM[var][0]} vintage {q(v)}" if v is not None
+               else f"RTDSM {rt.RTDSM[var][0]}: no vintage dated {q(t)}")
+        return lv, src, v
 
 
 def _forbid_replication_packages(raw_root: Path) -> None:
@@ -167,6 +175,17 @@ def _forbid_replication_packages(raw_root: Path) -> None:
             super().__init__(file, *a, **kw)
 
     zipfile.ZipFile = Guarded
+
+
+def _stale(g: pd.DataFrame) -> int:
+    """Rows with a vintage-t history whose x[t-1] is missing (late release)."""
+    n = 0
+    for _, r in g.iterrows():
+        if r.hist_vintage == "":
+            continue
+        end = pd.Period(r.hist_first, freq="Q") + len(r["hist"]) - 1
+        n += int(end != pd.Period(r.t, freq="Q") - 1 or not np.isfinite(r["hist"][-1]))
+    return n
 
 
 def main(argv=None) -> int:
@@ -188,7 +207,8 @@ def main(argv=None) -> int:
         rc = r - r.mean()
         b = float((rc * (e - e.mean())).sum() / (rc * rc).sum())
         print(f"{var:6s} {g.t.iloc[0]}-{g.t.iloc[-1]} rows {len(g):3d}  consensus b {b:+.6f} "
-              f"(T = {int(ok.sum())})  last_filled {int(g.last_filled.sum())}")
+              f"(T = {int(ok.sum())})  no vintage t: {int((g.hist_vintage == '').sum())}  "
+              f"x[t-1] missing (late release): {_stale(g)}")
     return 0
 
 

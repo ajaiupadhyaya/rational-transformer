@@ -56,7 +56,7 @@ def ar1_panel(kind, n_vars=2, n_q=90, burn=70, mu=None, sigma=None, seed=0, rho=
             out = 100 * (x[k + 3] / x[k - 1] - 1) if kind == "growth" else x[k + 3]
             rows.append({"variable": var, "kind": kind, "target": "t+3", "t": _q(t),
                          "hist_first": _q(START), "hist": list(x[:k]), "hist_source": "synthetic",
-                         "last_filled": False, "outcome": out, "cons_err": 0.0, "cons_rev": 0.0,
+                         "hist_vintage": _q(t), "last_filled": False, "outcome": out, "cons_err": 0.0, "cons_rev": 0.0,
                          "n_pairs": 0, **{f"spf_c{j}": np.nan for j in range(1, 7)},
                          "ind_id": [], "ind_err": [], "ind_rev": []})
     return pd.DataFrame(rows, columns=spf.PANEL_COLUMNS), raw
@@ -308,7 +308,9 @@ class FixtureSource:
 
     def history(self, var, t):
         idx = pd.period_range("1999Q1", t + 1, freq="Q")         # includes t and t+1: dropped
-        return pd.Series(np.arange(len(idx), dtype=float) + 10, index=idx), "fixture", t.quarter == 2
+        # UNEMP 2000Q2 claims a later vintage: the export must not use it
+        vintage = t + 1 if (var == "UNEMP" and t.quarter == 2) else t
+        return pd.Series(np.arange(len(idx), dtype=float) + 10, index=idx), "fixture", vintage
 
 
 def test_export_schema_on_fixture(tmp_path):
@@ -324,9 +326,13 @@ def test_export_schema_on_fixture(tmp_path):
     assert list(p.t[:3]) == ["2000Q1", "2000Q2", "2000Q3"]
     for _, r in p.iterrows():
         lv = spf.row_levels(r)
+        if r.variable == "UNEMP" and r.t == "2000Q2":
+            assert len(lv) == 0 and r.hist_vintage == ""     # later vintage refused outright
+            continue
+        assert r.hist_vintage == r.t
         assert lv.index.min() == pd.Period("1999Q1", freq="Q")
         assert lv.index.max() == pd.Period(r.t, freq="Q") - 1       # nothing dated >= t
-    assert list(p.last_filled[:3]) == [False, True, False]
+    assert not p.last_filled.any()
     r0 = p.iloc[0]
     assert r0.n_pairs == 2 and list(r0.ind_id) == [1, 2]
     assert r0.cons_err == pytest.approx(0.15) and r0.cons_rev == pytest.approx(0.4)
@@ -346,3 +352,91 @@ def test_export_refuses_replication_packages(tmp_path, monkeypatch):
         with pytest.raises(PermissionError):
             zipfile.ZipFile(tmp_path / sub / "x.zip")
     zipfile.ZipFile(tmp_path / "spf" / "x.zip").close()
+
+
+# ---- strict real time (review C1, C2) ------------------------------------------------
+
+def _vintage_matrix():
+    """Observations 1990Q1..1995Q4 x vintages 1994Q1..1996Q2. Vintage v holds obs < v, with
+    values 1000 * (vintage index) + obs index so each vintage is identifiable; vintage 1996Q1
+    lacks 1995Q4 (late release); vintages before 1994Q1 do not exist."""
+    obs = pd.period_range("1990Q1", "1995Q4", freq="Q")
+    vin = pd.period_range("1994Q1", "1996Q2", freq="Q")
+    m = pd.DataFrame(np.nan, index=obs, columns=vin)
+    for j, v in enumerate(vin):
+        for i, o in enumerate(obs):
+            if o < v:
+                m.loc[o, v] = 1000.0 * (j + 1) + i
+    m.loc[pd.Period("1995Q4", freq="Q"), pd.Period("1996Q1", freq="Q")] = np.nan
+    return m
+
+
+def test_export_history_never_comes_from_a_vintage_after_t():
+    ex = _export_module()
+    m = _vintage_matrix()
+    for t in pd.period_range("1992Q1", "1996Q2", freq="Q"):
+        lv, v = ex.vintage_history(m, t)
+        if t < m.columns.min():
+            assert v is None and len(lv) == 0           # no same-date vintage: nothing
+            continue
+        assert v == t
+        assert (lv.index < t).all()
+        np.testing.assert_array_equal(lv.to_numpy(), m[t].dropna().to_numpy())
+        assert (lv // 1000 == list(m.columns).index(t) + 1).all()    # all from vintage t
+    lv, _ = ex.vintage_history(m, pd.Period("1996Q1", freq="Q"))
+    assert lv.index.max() == pd.Period("1995Q3", freq="Q")           # late x[t-1] not filled
+
+
+def test_rows_not_strictly_real_time_drop_out_for_model_and_survey():
+    """A filled row, a row whose x[t-1] is missing, or a row from another vintage: no model
+    forecast at t, no revision at t+1, and both quarters leave the survey's b too."""
+    f = plugin_ar1()
+    panel, _ = ar1_panel("level", n_vars=1, n_q=20, seed=5)
+    rng = np.random.default_rng(6)
+    panel["cons_err"], panel["cons_rev"] = rng.standard_normal(20), rng.standard_normal(20)
+    panel.loc[0, ["cons_err", "cons_rev"]] = np.nan
+    base = spf.spf_comparison(f, panel)
+    assert base["T"].iloc[0] == 19
+    i = 10
+    for change in ("filled", "missing", "vintage"):
+        bad = panel.copy()
+        if change == "filled":
+            bad.loc[i, "last_filled"] = True
+        elif change == "missing":
+            h = list(bad.loc[i, "hist"])
+            h[-1] = np.nan
+            bad.at[i, "hist"] = h
+        else:
+            bad.loc[i, "hist_vintage"] = _q(pd.Period(bad.loc[i, "t"], freq="Q") + 1)
+        assert spf.not_real_time(bad.loc[i]) is not None
+        q = spf.model_quarters(f, bad).set_index("t")
+        t, t1 = bad.loc[i, "t"], bad.loc[i + 1, "t"]
+        assert np.isnan(q.loc[t, "fc"]) and np.isnan(q.loc[t1, "fc_prev"])
+        assert q.drop(index=[t, t1])[["err", "rev"]].iloc[1:].notna().all().all()
+        tab = spf.spf_comparison(f, bad)
+        assert tab["T"].iloc[0] == 17
+        keep = ~panel.t.isin([t, t1]) & panel.cons_err.notna()
+        assert tab.b_survey.iloc[0] == pytest.approx(
+            slope(panel.cons_err[keep].to_numpy(), panel.cons_rev[keep].to_numpy()))
+        d = spf.drop_check(bad)
+        assert d.table.not_real_time.iloc[0] == 1 and (d.table.n == 18).all()
+
+
+# ---- per-cell 20% rule (review I1, controller ruling 2026-11-18) ----------------------
+
+def test_spf_arm_omits_a_variable_window_cell_over_20pct():
+    panel, _ = ar1_panel("level", n_vars=5, n_q=12)
+    p = panel.copy()
+    bad = p.variable == "V0"                          # 12 of 60 rows: pooled 20%, not > 20%
+    p.loc[bad, "hist"] = pd.Series([list(h[:-4]) + [v + 1e3 for v in h[-4:]]
+                                    for h in p.loc[bad, "hist"]], index=p.index[bad])
+    d = spf.drop_check(p)
+    assert not d.drop
+    tbl = d.table.set_index(["variable", "window"])
+    assert tbl.loc[("V0", "full"), "frac_out"] == 1.0 and tbl.loc[("V1", "4"), "frac_out"] == 0.0
+    assert {(o["variable"], o["window"]) for o in d.omitted} == {("V0", "full"), ("V0", "4")}
+    assert "Omitted from the table" in d.text and "V0 window full" in d.text
+    tab, d2 = spf.spf_arm({"m": (plugin_ar1(), None), "m4": (plugin_ar1(), 4)}, p)
+    assert "V0" not in set(tab.variable) and len(tab) == 8
+    assert (tab.frac_out == 0.0).all() and list(tab.columns) == spf.COMPARISON_COLUMNS
+    assert d2.omitted == d.omitted

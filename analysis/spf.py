@@ -46,15 +46,28 @@ time indices 1..80, so "all values" means the last 80 scaled differences, fed wi
 1..n (n <= 80). A window-W model gets the last W, fed with indices 80-W+1..80 (a late origin,
 as most training origins are).
 
+Strict real time: a row is used only if its history is vintage t itself (`hist_vintage` ==
+t), ends at t-1, and was not completed from a later vintage (`last_filled` False). Otherwise
+the model has no forecast at t (and none for the revision at t+1); the same-quarters rule then
+drops those quarters from the survey's b as well. In the panel this removes CPI before 1994Q4
+(real-time CPI vintages start in 1994Q3) and 1996Q1-1996Q2 for NGDP, RGDP and PGDP (x[1995Q4]
+was released after the 1996Q1 survey deadline).
+
 Drop rule (PREREG section 8; plan Task 11 step 4): the arm is dropped if the survey's
 horizons cannot be matched to model horizons, or if for more than 20% of the variable-quarters
 the scaled history fed to a Family B model leaves the range Family B was trained on. That range
 is the central 99% of standardised Family B training values (x - mu) / sigma at t = 1..80,
 rho from its U[0, 1] prior (`family_b_range`, 100,000 simulated paths, fixed seed; about
 [-5.72, +5.79]). A variable-quarter is out of range if any value fed to the model lies outside
-it, or if its history cannot be scaled or does not end at t-1. The fraction is pooled over
-variables and checked for each Family B window (full and 4) over the variable-quarters with a
-survey error and revision.
+it, or if its history cannot be scaled. The fraction is pooled over variables and checked for
+each Family B window (full and 4) over the variable-quarters with a survey error and revision
+and a real-time history (rows refused under strict real time are counted separately, as
+`not_real_time`, and are not part of the fraction).
+
+Per-cell rule (controller ruling, docs/DECISIONS.md 2026-11-18): a variable-window cell whose
+own out-of-range fraction `frac_out` exceeds 20% is omitted from the comparison table (its b is
+not printed) and listed with the reason in `DropDecision.omitted`; the arm itself is kept
+unless the pooled rule fires.
 
 `forecaster_from_checkpoint` wraps a trained Family B checkpoint for later use; this module
 never loads one on its own.
@@ -78,7 +91,7 @@ from rt.train import T_MAX
 ROOT = Path(__file__).resolve().parent.parent
 PANEL = ROOT / "data" / "spf_panel.parquet"
 PANEL_COLUMNS = (["variable", "kind", "target", "t", "hist_first", "hist", "hist_source",
-                  "last_filled", "outcome", "cons_err", "cons_rev", "n_pairs"]
+                  "hist_vintage", "last_filled", "outcome", "cons_err", "cons_rev", "n_pairs"]
                  + [f"spf_c{k}" for k in range(1, 7)] + ["ind_id", "ind_err", "ind_rev"])
 TARGET = "t+3"
 # horizons of F_t (forecast at t) and of F_{t-1} (forecast at t-1) that build fc and fc_prev
@@ -90,7 +103,7 @@ RANGE_COVERAGE = 0.99
 RANGE_N = 100_000
 RANGE_SEED = (30_000, 0x5BF)          # apart from training (seed, 0xA11CE, step) and eval seeds
 COMPARISON_COLUMNS = ["model", "variable", "kind", "window", "horizons", "T", "first", "last",
-                      "b_model", "b_survey", "b_survey_ind", "n_ind"]
+                      "b_model", "b_survey", "b_survey_ind", "n_ind", "frac_out"]
 
 Forecaster = Callable[[np.ndarray], np.ndarray]
 
@@ -181,12 +194,26 @@ def target_forecast(F: np.ndarray, last_level: float, kind: str, hs) -> float:
     raise ValueError(f"unknown kind {kind!r}")
 
 
-def _forecast_row(forecaster: Forecaster, row, window: int | None):
-    """(F in original units, x[t-1], fed scaled values) or None if the row cannot be used."""
+def not_real_time(row) -> str | None:
+    """Why the row's history is not strictly real time, or None if it is: it must be vintage
+    t itself, end at t-1, and not be completed from a later vintage."""
     t = _q(row["t"])
+    if bool(row["last_filled"]):
+        return "x[t-1] taken from a later vintage"
+    if row["hist_vintage"] != row["t"]:
+        return f"history from vintage {row['hist_vintage'] or 'none'}, not {row['t']}"
     lv = row_levels(row)
     if not len(lv) or lv.index.max() != t - 1 or not np.isfinite(lv.iloc[-1]):
+        return "history does not end at t-1"
+    return None
+
+
+def _forecast_row(forecaster: Forecaster, row, window: int | None):
+    """(F in original units, x[t-1], fed scaled values) or None if the row cannot be used."""
+    if not_real_time(row) is not None:
         return None
+    t = _q(row["t"])
+    lv = row_levels(row)
     try:
         z, (loc, scale) = scale_history(lv, t, row["kind"])
     except ValueError:
@@ -262,7 +289,7 @@ def spf_comparison(forecaster: Forecaster, panel: pd.DataFrame, window: int | No
                      "last": s["t"].iloc[-1] if len(s) else "",
                      "b_model": _slope(s["err"], s["rev"]),
                      "b_survey": _slope(s["cons_err"], s["cons_rev"]),
-                     "b_survey_ind": _slope(ie, ir), "n_ind": int(len(ie))})
+                     "b_survey_ind": _slope(ie, ir), "n_ind": int(len(ie)), "frac_out": np.nan})
     return pd.DataFrame(rows, columns=COMPARISON_COLUMNS)
 
 
@@ -275,6 +302,7 @@ class DropDecision:
     bounds: tuple[float, float]
     in_range: dict[str, float] = field(default_factory=dict)   # window -> pooled fraction
     table: pd.DataFrame = field(default_factory=pd.DataFrame)  # per variable and window
+    omitted: list[dict] = field(default_factory=list)          # cells over the per-cell limit
 
     @property
     def text(self) -> str:
@@ -283,9 +311,12 @@ class DropDecision:
         if self.drop:
             return "Survey comparison dropped (PREREG section 8 drop rule): " + "; ".join(
                 self.reasons) + "."
-        return (f"Survey comparison kept: survey horizons matched (t+3 target; model horizons "
+        text = (f"Survey comparison kept: survey horizons matched (t+3 target; model horizons "
                 f"1-5); scaled histories within the Family B range [{lo:.2f}, {hi:.2f}] for "
                 f"{fr} (limit: at most {100 * OUT_OF_RANGE_MAX:.0f}% out of range).")
+        if self.omitted:
+            text += " Omitted from the table: " + "; ".join(o["reason"] for o in self.omitted) + "."
+        return text
 
 
 def drop_check(panel: pd.DataFrame, windows=FAMILY_B_WINDOWS, max_horizon: int = max(HORIZONS),
@@ -307,8 +338,12 @@ def drop_check(panel: pd.DataFrame, windows=FAMILY_B_WINDOWS, max_horizon: int =
         if need > max_horizon:
             reasons.append(f"horizons cannot be matched for {var}: needs model horizon {need}, "
                            f"models forecast 1..{max_horizon}")
-    use = panel[panel["cons_err"].notna() & panel["cons_rev"].notna()]
-    rows, in_range = [], {}
+    surveyed = panel[panel["cons_err"].notna() & panel["cons_rev"].notna()]
+    real = pd.Series([not_real_time(r) is None for _, r in surveyed.iterrows()],
+                     index=surveyed.index, dtype=bool)
+    use = surveyed[real]
+    excluded = (~real).groupby(surveyed["variable"], sort=False).sum()
+    rows, in_range, omitted = [], {}, []
     for w in windows:
         wname = "full" if w is None else str(w)
         n_out = n_bad = 0
@@ -318,8 +353,6 @@ def drop_check(panel: pd.DataFrame, windows=FAMILY_B_WINDOWS, max_horizon: int =
             for _, r in g.iterrows():
                 t, lv = _q(r["t"]), row_levels(r)
                 try:
-                    if not len(lv) or lv.index.max() != t - 1:
-                        raise ValueError("stale history")
                     z, _ = scale_history(lv, t, r["kind"])
                     fed = fed_values(z.to_numpy(), w)
                     if not np.all(np.isfinite(fed)):
@@ -329,9 +362,15 @@ def drop_check(panel: pd.DataFrame, windows=FAMILY_B_WINDOWS, max_horizon: int =
                     continue
                 worst = max(worst, float(np.abs(fed).max()))
                 out += int(fed.min() < lo or fed.max() > hi)
-            rows.append({"variable": var, "window": wname, "n": int(len(g)), "out_of_range": out,
-                         "unscalable": bad, "frac_out": (out + bad) / len(g) if len(g) else np.nan,
-                         "max_abs_fed": worst})
+            frac_v = (out + bad) / len(g) if len(g) else np.nan
+            rows.append({"variable": var, "window": wname, "n": int(len(g)),
+                         "not_real_time": int(excluded.get(var, 0)), "out_of_range": out,
+                         "unscalable": bad, "frac_out": frac_v, "max_abs_fed": worst})
+            if len(g) and frac_v > limit:
+                omitted.append({"variable": var, "window": wname, "frac_out": frac_v,
+                                "reason": f"{var} window {wname}: {100 * frac_v:.1f}% of its "
+                                          f"{len(g)} variable-quarters outside the Family B "
+                                          f"range (limit {100 * limit:.0f}% per cell)"})
             n_out, n_bad = n_out + out, n_bad + bad
         n = len(use)
         frac = (n_out + n_bad) / n if n else 1.0
@@ -343,19 +382,28 @@ def drop_check(panel: pd.DataFrame, windows=FAMILY_B_WINDOWS, max_horizon: int =
                            f"[{lo:.2f}, {hi:.2f}] (or unscalable) for {100 * frac:.1f}% of "
                            f"{n} variable-quarters (limit {100 * limit:.0f}%)")
     return DropDecision(drop=bool(reasons), reasons=reasons, bounds=(lo, hi),
-                        in_range=in_range, table=pd.DataFrame(rows))
+                        in_range=in_range, table=pd.DataFrame(rows), omitted=omitted)
 
 
 def spf_arm(forecasters: dict[str, tuple[Forecaster, int | None]], panel=None
             ) -> tuple[pd.DataFrame, DropDecision]:
     """The comparison table for labelled (forecaster, window) pairs, plus the drop decision.
-    If the arm is dropped the table is empty and the decision says why."""
+
+    If the arm is dropped the table is empty and the decision says why. Otherwise each row
+    carries its variable-window `frac_out`, and cells over the per-cell limit are left out
+    (they are listed in `decision.omitted`)."""
     panel = load_panel() if panel is None else panel
-    decision = drop_check(panel)
+    decision = drop_check(panel, windows=tuple(dict.fromkeys(w for _, w in forecasters.values())))
     if decision.drop:
         return pd.DataFrame(columns=COMPARISON_COLUMNS), decision
-    frames = [spf_comparison(f, panel, w, label) for label, (f, w) in forecasters.items()]
-    return pd.concat(frames, ignore_index=True), decision
+    frac = {(r.variable, r.window): r.frac_out for r in decision.table.itertuples()}
+    skip = {(o["variable"], o["window"]) for o in decision.omitted}
+    frames = []
+    for label, (f, w) in forecasters.items():
+        tab = spf_comparison(f, panel, w, label)
+        tab["frac_out"] = [frac.get(k, np.nan) for k in zip(tab.variable, tab.window)]
+        frames.append(tab[[k not in skip for k in zip(tab.variable, tab.window)]])
+    return pd.concat(frames, ignore_index=True)[COMPARISON_COLUMNS], decision
 
 
 # ---- forecasters -------------------------------------------------------------
@@ -416,8 +464,8 @@ def main(argv=None) -> None:
     print(d.text)
     print(d.table.to_string(index=False))
     if args.standin == "bayes":
-        tab = pd.concat([spf_comparison(bayes_forecaster(w), panel, w, "bayes_b stand-in")
-                         for w in FAMILY_B_WINDOWS], ignore_index=True)
+        tab, _ = spf_arm({f"bayes_b stand-in w{'full' if w is None else w}":
+                          (bayes_forecaster(w), w) for w in FAMILY_B_WINDOWS}, panel)
         print(tab.to_string(index=False, float_format=lambda v: f"{v:+.3f}"))
 
 

@@ -288,7 +288,34 @@ Fixed before any Family B checkpoint exists or is loaded. Code: `analysis/spf.py
   t = 1..80, rho ~ U[0, 1] (100,000 simulated paths, seed (30000, 0x5BF)): about [-5.72, 5.79].
   A variable-quarter is out of range if any fed value is outside it (or it cannot be scaled);
   the fraction is pooled over variables, per Family B window, over variable-quarters with a
-  survey error and revision. On the real panel (no model involved): 93.2% in range for the full
-  window (all 77 misses are TB3M, 1981Q4-2000Q4: the 1980Q2 and 1980Q4 changes in the 3-month
-  bill rate reach 6.9 sd and stay in the last 80 values), 99.9% for window 4 (1 miss: TB3M
-  1981Q4). The drop rule does not fire.
+  survey error and revision and a strictly real-time history (see the 2026-11-18 entries for
+  the real-time rule, the per-cell rule and the current figures).
+
+## 2026-11-18: Survey comparison, strict real time (review C1, C2; controller ruling)
+
+Decided before any trained Family B model was run on SPF data. Supersedes the 2026-11-17
+conventions where they differ.
+
+- A history fed to a model must be vintage t itself (`hist_vintage` == t), ending at t-1, never
+  completed from a later vintage. The export no longer fills a late x[t-1] from the next vintage
+  (that figure was published after the survey deadline), and no longer uses the first available
+  later vintage when vintage t does not exist. `analysis/spf.py` refuses any row with
+  `last_filled` True, a vintage other than t, or a missing x[t-1].
+- Consequences: NGDP, RGDP and PGDP lose 1996Q1 (no x[1995Q4] in the 1996Q1 vintage) and 1996Q2
+  (its revision needs the 1996Q1 forecast); CPI comparison quarters start in 1994Q4 (the first
+  real-time CPI vintage is 1994Q3, and the revision needs the t-1 vintage too). The survey's b
+  is computed on the same reduced quarters.
+
+## 2026-11-18: Survey comparison, per-cell 20% rule (review I1; controller ruling)
+
+Decided before any trained Family B model was run on SPF data. Reason: the closest reading of
+PREREG section 8's "matched cleanly"; under the pooled rule alone, TB3M's full-window cell
+(about 55% of its quarters out of range) would have been printed.
+
+- Any variable-window cell whose own out-of-range fraction exceeds 20% is omitted from the
+  comparison table (its b is not printed) and listed with the reason. The pooled 20% rule that
+  drops the whole arm stays as well.
+- Current figures on the real panel (scaled histories only, no model): full window 92.8% in
+  range pooled (77 of 1,075 real-time variable-quarters out, all TB3M 1981Q4-2000Q4: the 1980Q2
+  and 1980Q4 bill-rate changes reach 6.9 sd and stay in the last 80 values); window 4 99.9%
+  (1 out: TB3M 1981Q4). The arm is kept; the TB3M full-window cell (54.6%) is omitted.
