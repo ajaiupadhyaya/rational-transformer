@@ -267,13 +267,19 @@ def test_spf_arm_returns_empty_table_when_dropped():
 
 # ---- checkpoint wrapper (synthetic checkpoint, never a real one) --------------------
 
+def _ckpt(root, cell_id, cfg, model):
+    d = root / cell_id
+    d.mkdir(parents=True, exist_ok=True)
+    torch.save({"config": cfg, "model": model.state_dict()}, d / "step1.pt")
+    return d / "step1.pt"
+
+
 @pytest.mark.parametrize("window", [None, 4])
 def test_forecaster_from_checkpoint_on_a_synthetic_checkpoint(tmp_path, window):
     cfg = load_cfg()
     torch.manual_seed(0)
     model = build_model(cfg, "xs")
-    path = tmp_path / "step1.pt"
-    torch.save({"config": cfg, "model": model.state_dict()}, path)
+    path = _ckpt(tmp_path, f"B-xs-w{'full' if window is None else window}-s0", cfg, model)
     f = spf.forecaster_from_checkpoint(path, window, size="xs")
     z = np.random.default_rng(0).standard_normal(120)
     out = f(z)
@@ -440,3 +446,48 @@ def test_spf_arm_omits_a_variable_window_cell_over_20pct():
     assert "V0" not in set(tab.variable) and len(tab) == 8
     assert (tab.frac_out == 0.0).all() and list(tab.columns) == spf.COMPARISON_COLUMNS
     assert d2.omitted == d.omitted
+
+
+def test_forecaster_from_checkpoint_validates_family_size_window(tmp_path):
+    cfg = load_cfg()
+    torch.manual_seed(0)
+    model = build_model(cfg, "xs")
+    a = _ckpt(tmp_path, "A-xs-w4-s0", cfg, model)
+    b4 = _ckpt(tmp_path, "B-xs-w4-s0", cfg, model)
+    bf = _ckpt(tmp_path, "B-xs-wfull-s0", cfg, model)
+    with pytest.raises(ValueError, match="Family A"):
+        spf.forecaster_from_checkpoint(a, 4, size="xs")
+    with pytest.raises(ValueError, match="window is 4, expected full"):
+        spf.forecaster_from_checkpoint(b4, None, size="xs")
+    with pytest.raises(ValueError, match="window is full, expected 4"):
+        spf.forecaster_from_checkpoint(bf, 4, size="xs")
+    with pytest.raises(ValueError, match="size 'xs', expected 'l'"):
+        spf.forecaster_from_checkpoint(b4, 4, size="l")
+    odd = tmp_path / "somewhere"
+    odd.mkdir()
+    torch.save({"config": cfg, "model": model.state_dict()}, odd / "step1.pt")
+    with pytest.raises(ValueError, match="not a cell id"):
+        spf.forecaster_from_checkpoint(odd / "step1.pt", 4, size="xs")
+    (b4.parent / "run.json").write_text('{"cell": "B-xs-w8-s0"}')
+    with pytest.raises(ValueError, match="run.json"):
+        spf.forecaster_from_checkpoint(b4, 4, size="xs")
+    (b4.parent / "run.json").write_text('{"cell": "B-xs-w4-s0"}')
+    assert spf.forecaster_from_checkpoint(b4, 4, size="xs")(np.zeros(10)).shape == (6,)
+
+
+@pytest.mark.parametrize("window,n", [(4, 2), (8, 3), (None, 7)])
+def test_short_history_is_padded_as_in_training(tmp_path, window, n):
+    from rt.train import batch_from_x
+    cfg = load_cfg()
+    torch.manual_seed(1)
+    model = build_model(cfg, "xs").eval()
+    path = _ckpt(tmp_path, f"B-xs-w{'full' if window is None else window}-s0", cfg, model)
+    f = spf.forecaster_from_checkpoint(path, window, size="xs")
+    v = np.random.default_rng(3).standard_normal(n)
+    x = np.zeros((1, 87))
+    x[0, 1:n + 1] = v                                  # a series that has run for n periods
+    values, times, _, _ = batch_from_x(x, window, t=None if window is None else np.array([n]))
+    with torch.no_grad():
+        out = model(values, times)
+    ref = (out[0, n - 1] if window is None else out[0, -1]).numpy().astype(np.float64)
+    np.testing.assert_allclose(f(v), ref, atol=1e-5)

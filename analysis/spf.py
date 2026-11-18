@@ -412,16 +412,43 @@ def forecaster_from_checkpoint(path, window: int | None, size: str = "l",
                                device: str = "cpu") -> Forecaster:
     """A trained Family B `Forecaster` as a callable on 1-D scaled histories.
 
-    Loaded as `rt.evaluate._load_model` does (architecture from the checkpoint's own config).
-    Full window: the last T_MAX values with time indices 1..n. Window W: the last W values with
-    indices T_MAX-W+1..T_MAX. Returns the six forecasts read at the last position.
+    The checkpoint must be `<ckpt_dir>/<cell id>/step<N>.pt` of a Family B cell whose size and
+    window equal `size` and `window` (the cell id is the parent directory's name and, when
+    `run.json` sits beside it, must agree with it); anything else raises ValueError. The
+    architecture comes from the checkpoint's own config, as in `rt.evaluate._load_model`.
+
+    Full window: the last T_MAX values with time indices 1..n. Window W with at least W values:
+    the last W values with indices T_MAX-W+1..T_MAX. Window W with n < W values: indices 1..n,
+    left-padded with (value 0, time 0) to length W, exactly as `rt.train.batch_from_x` does
+    for an origin t = n < W. Returns the six forecasts read at the last position.
     """
+    import json
+
     import torch
 
     from rt.evaluate import _load_model
     from rt.train import Cell
 
-    model, _ = _load_model(Cell("B", size, window, 0), Path(path))
+    path = Path(path)
+    try:
+        cell = Cell.parse(path.parent.name)
+    except ValueError as e:
+        raise ValueError(f"{path}: the parent directory is not a cell id ({e})") from None
+    run_json = path.parent / "run.json"
+    if run_json.exists():
+        rid = json.loads(run_json.read_text()).get("cell")
+        if rid is not None and rid != cell.id:
+            raise ValueError(f"{path}: run.json says cell {rid!r} but the directory is {cell.id!r}")
+    want = "full" if window is None else str(window)
+    got = "full" if cell.window is None else str(cell.window)
+    if cell.family != "B":
+        raise ValueError(f"{path}: checkpoint is Family {cell.family}, need Family B")
+    if cell.size != size:
+        raise ValueError(f"{path}: checkpoint is size {cell.size!r}, expected {size!r}")
+    if got != want:
+        raise ValueError(f"{path}: checkpoint window is {got}, expected {want}")
+
+    model, _ = _load_model(cell, path)
     dev = torch.device(device)
     model.to(dev).eval()
 
@@ -429,7 +456,13 @@ def forecaster_from_checkpoint(path, window: int | None, size: str = "l",
     def f(hist) -> np.ndarray:
         v = fed_values(hist, window)
         n = len(v)
-        times = np.arange(1, n + 1) if window is None else np.arange(T_MAX - n + 1, T_MAX + 1)
+        if window is None:
+            times = np.arange(1, n + 1)
+        elif n >= window:
+            times = np.arange(T_MAX - n + 1, T_MAX + 1)
+        else:                                   # start of a series: pad as in training
+            v = np.concatenate([np.zeros(window - n), v])
+            times = np.concatenate([np.zeros(window - n, dtype=int), np.arange(1, n + 1)])
         out = model(torch.tensor(v[None], dtype=torch.float32, device=dev),
                     torch.tensor(times[None], dtype=torch.long, device=dev))[0, -1]
         return out.cpu().numpy().astype(np.float64)

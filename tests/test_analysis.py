@@ -486,3 +486,79 @@ def test_results_trace_60k_and_incomplete(tmp_path):
     for r in H["runs"]:
         assert f"| {r['cell_id']} | 3000, 10000, 30000 | {'yes' if r['converged'] else 'no'} |" in text
     assert "| A-l-w8-s0 | 3000, 10000, 30000 | no |" in text
+
+
+# ---------------------------------------------------------------- SPF wiring (tiny trained model, synthetic panel)
+
+@pytest.fixture(scope="module")
+def tiny_b_ckpts(tmp_path_factory):
+    from rt.train import train_cell
+    root = tmp_path_factory.mktemp("ckpt")
+    cfg = load_cfg(max_steps=4, checkpoints=[4], batch_size=8, warmup_steps=1, log_every=2)
+    for w in (None, 4):
+        for seed in (0, 1):
+            train_cell(Cell("B", "xs", w, seed), cfg, root, "cpu")
+    return root
+
+
+def spf_report(tmp_path, ckpts, panel):
+    out = tmp_path / "out"
+    H = report.run(make_dir(tmp_path, "metrics", cells_l(windows=(None,), seeds=range(2))), out,
+                   cfg=load_cfg(), aklmt_zip=tmp_path / "none.zip", benchmarks=False,
+                   spf_ckpt_dir=ckpts, spf_panel=panel, spf_step=4, spf_size="xs")
+    return H, (out / "RESULTS.md").read_text()
+
+
+def test_report_spf_section(tmp_path, tiny_b_ckpts):
+    from tests.test_spf import ar1_panel
+    panel, _ = ar1_panel("level", n_vars=1, n_q=90)
+    panel = panel.copy()
+    rng = np.random.default_rng(5)
+    panel["cons_err"], panel["cons_rev"] = rng.normal(size=len(panel)), rng.normal(size=len(panel))
+    H, text = spf_report(tmp_path, tiny_b_ckpts, panel)
+    S = H["spf"]
+    assert S["status"] == "ok" and len(S["rows"]) == 2           # one variable x (full, 4)
+    assert {r["window"] for r in S["rows"]} == {"full", "4"}
+    sect = text.split("## Illustrative comparison")[1].split("## Figures")[0]
+    assert "strict real-time comparison sample" in sect and "not on the full replication sample" in sect
+    num = re.compile(r"[+-]?\d+\.\d+")
+    for r in S["rows"]:
+        ln = [l for l in sect.splitlines() if l.startswith(f"| {r['variable']} | {r['window']} | ")]
+        assert len(ln) == 1
+        c = [x.strip() for x in ln[0].strip("| ").split("|")]
+        assert abs(float(c[2]) - r["b_model_mean"]) <= 0.5e-4 + 1e-12
+        assert len(r["b_model_values"]) == 2
+        for a, b in zip(num.findall(c[3]), r["b_model_values"]):
+            assert abs(float(a) - b) <= 0.5e-4 + 1e-12
+        assert abs(float(c[4]) - r["b_survey"]) <= 0.5e-4 + 1e-12
+        assert int(c[5]) == r["T"]
+    assert "no step-4 checkpoint" in sect and "B-xs-w4-s2" in sect      # seeds 2-4 absent: listed
+
+
+def test_report_spf_dropped_prints_only_reason(tmp_path, tiny_b_ckpts):
+    from tests.test_spf import ar1_panel, _with_outliers
+    panel, _ = ar1_panel("level", n_vars=1, n_q=90)
+    panel = panel.copy()
+    rng = np.random.default_rng(5)
+    panel["cons_err"], panel["cons_rev"] = rng.normal(size=len(panel)), rng.normal(size=len(panel))
+    H, text = spf_report(tmp_path, tiny_b_ckpts, _with_outliers(panel, every=1))
+    assert H["spf"]["status"] == "dropped" and H["spf"]["rows"] == []
+    sect = text.split("## Illustrative comparison")[1].split("## Figures")[0]
+    assert "The arm is dropped:" in sect and "| variable |" not in sect
+
+
+def test_report_spf_off_by_default(full_dir, tmp_path):
+    H = report.run(full_dir, tmp_path / "o", cfg=load_cfg(), aklmt_zip=tmp_path / "n.zip", benchmarks=False)
+    assert H["spf"] is None
+    assert "Not run in this report." in (tmp_path / "o" / "RESULTS.md").read_text()
+
+
+def test_report_spf_inconsistent_checkpoint_is_omitted_with_reason(tmp_path, tiny_b_ckpts):
+    import shutil
+    from analysis.report import spf_section
+    root = tmp_path / "ck"
+    shutil.copytree(tiny_b_ckpts / "B-xs-w4-s0", root / "B-xs-w4-s0")
+    (root / "B-xs-w4-s0" / "run.json").write_text('{"cell": "B-xs-w8-s0"}')
+    S = spf_section(root, step=4, size="xs", seeds=range(1))
+    assert S["status"] == "no checkpoints"
+    assert any("run.json" in o["reason"] for o in S["omitted"])

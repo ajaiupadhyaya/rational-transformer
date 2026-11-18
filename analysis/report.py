@@ -216,6 +216,78 @@ def make_figures(summary, human, fig_dir: Path):
                       "model size", sizes_over=True)
 
 
+
+# ---------------------------------------------------------------- SPF arm (illustrative)
+
+def spf_section(ckpt_dir, *, panel=None, step: int = 30000, size: str = "l", seeds=range(5)) -> dict:
+    """Run the survey comparison for the Family B window runs (full, 4) found in `ckpt_dir`.
+
+    Each present seed's step-`step` checkpoint is wrapped by `forecaster_from_checkpoint`.
+    Returns a JSON-safe dict: status, drop text, per variable and window rows (model b seed
+    mean and values, survey b, T, frac_out) and the omitted cells with reasons.
+    """
+    from analysis import spf
+
+    ckpt_dir = Path(ckpt_dir)
+    omitted, fcs, order = [], {}, {}
+    for w in spf.FAMILY_B_WINDOWS:
+        for seed in seeds:
+            cell = Cell("B", size, w, seed)
+            path = ckpt_dir / cell.id / f"step{step}.pt"
+            if not path.exists():
+                omitted.append({"cell": cell.id, "reason": f"no step-{step} checkpoint"})
+                continue
+            try:
+                fcs[cell.id] = (spf.forecaster_from_checkpoint(path, w, size=size), w)
+            except ValueError as e:
+                omitted.append({"cell": cell.id, "reason": str(e)})
+                continue
+            order[cell.id] = seed
+    out = {"status": "ok", "drop_text": None, "rows": [], "omitted": omitted, "step": step}
+    if not fcs:
+        out["status"] = "no checkpoints"
+        return out
+    tab, decision = spf.spf_arm(fcs, panel)
+    if decision.drop:
+        out["status"], out["drop_text"] = "dropped", decision.text
+        return out
+    for o in decision.omitted:
+        omitted.append({"cell": f"{o['variable']} window {o['window']}", "reason": o["reason"]})
+    tab = tab.assign(_seed=tab["model"].map(order)).sort_values(["_seed"])
+    for (var, win), g in tab.groupby(["variable", "window"], sort=False):
+        vals = [float(v) for v in g["b_model"]]
+        out["rows"].append({"variable": var, "window": win, "n_seeds": len(vals),
+                            "b_model_mean": float(np.mean(vals)), "b_model_values": vals,
+                            "b_survey": float(g["b_survey"].iloc[0]),
+                            "T": int(g["T"].iloc[0]), "frac_out": float(g["frac_out"].iloc[0])})
+    return out
+
+
+def _render_spf(S: dict | None) -> list[str]:
+    L = ["## Illustrative comparison (exploratory; not a test)", ""]
+    if not S:
+        return L + ["Not run in this report.", ""]
+    L.append("Real SPF histories are fed to the Family B size-l models; real series are not AR(1) "
+             "and the models never saw them. The survey b printed here is computed on the strict "
+             "real-time comparison sample (only quarters whose history is the vintage of the "
+             "survey date itself, with the same quarters for model and survey), not on the full "
+             "replication sample.")
+    L.append("")
+    if S["status"] == "dropped":
+        L += [f"The arm is dropped: {S['drop_text']}", ""]
+    elif S["status"] == "no checkpoints":
+        L += ["No Family B checkpoint was found for this comparison.", ""]
+    else:
+        L.append(_table(["variable", "window", "model b (seed mean)", "model b (seed values)",
+                         "survey b", "T", "frac_out"],
+                        [[r["variable"], r["window"], f4(r["b_model_mean"]), _vals(r["b_model_values"]),
+                          f4(r["b_survey"]), str(r["T"]), f"{r['frac_out']:.3f}"] for r in S["rows"]]))
+        L.append("")
+    if S["omitted"]:
+        L += ["Omitted:", ""] + [f"- {o['cell']}: {o['reason']}" for o in S["omitted"]] + [""]
+    return L
+
+
 # ---------------------------------------------------------------- RESULTS.md
 
 def _h2_table(blocks: dict[str, dict]) -> str:
@@ -430,6 +502,7 @@ def render(summary: pd.DataFrame, H: dict, metrics_label: str) -> str:
     else:
         w("The check could not be run: the raw replication package is not available locally.")
     w("")
+    L.extend(_render_spf(H.get("spf")))
     w("## Figures")
     w("")
     for n, cap in (("fig1_gap_map", "Gap against window-Bayes by window and rho (size l, family A, "
@@ -445,7 +518,8 @@ def render(summary: pd.DataFrame, H: dict, metrics_label: str) -> str:
 # ---------------------------------------------------------------- driver
 
 def run(metrics_dir, out_dir=ROOT, *, metrics_60k_dir=None, eval_dir=None, cfg=None,
-        aklmt_zip=None, benchmarks=True, grid=None) -> dict:
+        aklmt_zip=None, benchmarks=True, grid=None, spf_ckpt_dir=None, spf_panel=None,
+        spf_step=30000, spf_size="l") -> dict:
     out = Path(out_dir)
     (out / "results").mkdir(parents=True, exist_ok=True)
     df = load_metrics(metrics_dir)
@@ -469,6 +543,8 @@ def run(metrics_dir, out_dir=ROOT, *, metrics_60k_dir=None, eval_dir=None, cfg=N
     H["human"] = _records(human)
     dc = hm.aklmt_design_check(aklmt_zip)
     H["design_check"] = None if dc is None else _records(dc)
+    H["spf"] = (spf_section(spf_ckpt_dir, panel=spf_panel, step=spf_step, size=spf_size)
+                if spf_ckpt_dir is not None else None)
     (out / "results" / "hypotheses.json").write_text(json.dumps(_clean(H), indent=1, allow_nan=False))
     H = json.loads((out / "results" / "hypotheses.json").read_text())
 
@@ -485,9 +561,11 @@ def main(argv=None) -> int:
     ap.add_argument("--metrics-60k", default=None, help="metrics dir of the 60,000-step re-train")
     ap.add_argument("--eval-dir", default=None)
     ap.add_argument("--no-benchmarks", action="store_true")
+    ap.add_argument("--spf", default=None, metavar="CKPT_DIR",
+                    help="checkpoint dir; adds the illustrative SPF comparison (off by default)")
     a = ap.parse_args(argv)
     run(a.metrics, a.out, metrics_60k_dir=a.metrics_60k, eval_dir=a.eval_dir,
-        benchmarks=not a.no_benchmarks)
+        benchmarks=not a.no_benchmarks, spf_ckpt_dir=a.spf)
     print(f"wrote {a.out}/RESULTS.md, results/summary.csv, results/hypotheses.json, figures/")
     return 0
 
