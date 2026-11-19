@@ -3,6 +3,9 @@
 # only on mains power: kills it on battery, restarts it on AC (cells resume from their last
 # checkpoint). Exits when both phases report nothing left to run.
 set -uo pipefail
+# Keep the Mac from idle- or system-sleeping while the runner is alive (2026-11-18: the Mac
+# slept through the whole 01:00-08:00 window). -s applies only on AC; closing the lid still sleeps.
+if [ -z "${RT_CAFFEINATED:-}" ]; then RT_CAFFEINATED=1 exec caffeinate -i -s "$0" "$@"; fi
 cd "$(git rev-parse --show-toplevel)"
 unset RT_CONFIG RT_EVAL_DIR
 LOG=results/mac_sweep.log
