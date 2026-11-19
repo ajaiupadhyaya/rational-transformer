@@ -4,6 +4,7 @@
 # if the instance's run time reaches the hard spend cap, whatever the sweep is doing.
 # Usage: cloud/watch.sh <ssh-host> <tnr-id> <price_per_hour> <hard_cap_usd> <created_epoch>
 set -uo pipefail
+export TNR_NO_SELFUPDATE=1  # tnr 2.0.51 self-update needs sudo and aborts every command
 HOST=$1; ID=$2; PRICE=$3; CAP=$4; CREATED=$5
 cd "$(git rev-parse --show-toplevel)"
 R=rational-transformer/results
