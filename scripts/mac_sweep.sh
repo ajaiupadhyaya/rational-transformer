@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Plan A (prereg-v1.1): sizes xs and s on the Mac (mps), 2 jobs, low priority. Runs the sweep
+# Plan A (prereg-v1.1): sizes xs and s on the Mac (mps), JOBS parallel jobs (default 2), low priority. Runs the sweep
 # only on mains power: kills it on battery, restarts it on AC (cells resume from their last
 # checkpoint). Exits when both phases report nothing left to run.
 set -uo pipefail
@@ -29,7 +29,7 @@ for glob in 'A-xs-*' 'A-s-*'; do
   while [ "$(remaining "$glob")" -gt 0 ]; do
     if ! on_ac; then echo "$(date -u +%FT%TZ) waiting (battery or outside RUN_HOURS)" >> $LOG; sleep 600; continue; fi
     echo "$(date -u +%FT%TZ) start $glob" >> $LOG
-    nice -n 15 uv run python -m rt.sweep --device mps --only "$glob" --jobs 2 --budget-usd 1 --price-per-hour 0 >> $LOG 2>&1 &
+    nice -n 15 uv run python -m rt.sweep --device mps --only "$glob" --jobs "${JOBS:-2}" --budget-usd 1 --price-per-hour 0 >> $LOG 2>&1 &
     pid=$!
     while kill -0 $pid 2>/dev/null; do
       if ! on_ac; then

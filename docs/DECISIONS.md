@@ -1,5 +1,7 @@
 # Decisions
 
+Dates in this log are UTC; commit and tag timestamps in git are local time (UTC−5).
+
 A running log of choices fixed during the project.
 
 ## 2026-11-16: Family B prior constants
@@ -319,3 +321,68 @@ PREREG section 8's "matched cleanly"; under the pooled rule alone, TB3M's full-w
   range pooled (77 of 1,075 real-time variable-quarters out, all TB3M 1981Q4-2000Q4: the 1980Q2
   and 1980Q4 bill-rate changes reach 6.9 sd and stay in the last 80 values); window 4 99.9%
   (1 out: TB3M 1981Q4). The arm is kept; the TB3M full-window cell (54.6%) is omitted.
+
+## 2026-11-20: sweep spend over the $12 sweep cap (after all runs finished)
+
+All 96 Plan A runs finished (cloud sweep done 2026-11-20 03:06 UTC; last Mac run 03:54 UTC).
+Cloud spend, estimated from instance time at $0.35/h: about $14.35 over four instances
+(~$2.11, ~$4.29, ~$4.60, ~$3.35), ~41 instance-hours, pilot included. That is over the $12
+sweep cap and the $15 total of the Plan A entry is nearly used. Cause: on 2026-11-18 the
+watcher's file copy (rsync, no timeout) hung from 08:07 UTC, about 6 GPU-hours of work after
+the last checkpoint was lost and the instance was not deleted on time; later instances
+resumed from checkpoints. Fixed in commit 71b69df (rsync/ssh timeouts, process-group time
+limit). The owner had set an overall hard limit of $20, which held. No cell was added, dropped
+or re-run selectively because of the overrun; the grid is exactly Plan A. Nothing was flagged,
+so the 60,000-step training-length re-train was not needed and was not run.
+
+## 2026-11-20: venue verdict (plan Task 12 step 2), after H1–H3 were read
+
+**Verdict: preprint (arXiv and SSRN) plus the esnupi report; a workshop submission later.**
+Owner asked for SSRN in addition on 2026-11-20.
+
+Reasons, from what H2 and H3 showed:
+- H3 is a clean, pre-registered null with tight intervals (no 95% upper end above +0.0008
+  against a +0.02 threshold), and H2 holds at every window against an information-matched
+  benchmark. The novelty search (docs/novelty_check.md) found no paper that measures the
+  expectations-literature slope diagnostics against an exact window-Bayes forecaster across
+  context lengths. That is worth a citable, timestamped preprint.
+- H1 is a near-replication (Balim et al. 2023; Akram and Vikalo 2024), the evidence is one
+  architecture on simulated AR(1) data, and the result is what the squared-error optimum
+  predicts once training succeeds. That is not a main-conference contribution on its own.
+- arXiv reaches the ML readers (cs.LG primary; econ.GN or q-fin cross-list); SSRN reaches the
+  expectations and behavioural-finance readers the paper is in conversation with (AKLMT, BGMS,
+  Coibion–Gorodnichenko). Both accept a PDF and allow the same paper on both.
+- A workshop on in-context learning or ML for economics is the right next step if the owner
+  wants peer review; it would want the evaluation-set bootstrap the review suggested (paper
+  section 05 notes that this error is not quantified).
+
+Preconditions before posting: the repository is public with the pre-registration tags (the
+paper cites it), the cover's report and issue numbers are set, and the cloud spend is
+confirmed in the Thunder console. arXiv may ask a first-time submitter for an endorsement in
+cs.LG. Posting is the owner's action; nothing is submitted on the owner's behalf without an
+explicit go.
+
+## 2026-11-20: timing of deviations v1.2 to v1.4, resumed runs (final review)
+
+Timing, from the ledger, file times and annotated tag dates (UTC). `prereg-v1.1` was tagged
+2026-11-17 19:44; the first confirmatory run started 19:47 and finished 19:51 (A-xs-w2-s0, s1).
+Primary cells A-l-w2-s0 to s2 had metrics files by 2026-11-18 00:18. The `analysis/` code was
+first committed at 00:33, `prereg-v1.2` (incomplete-seed rule) was tagged 00:45, `v1.3` (SPF
+arm) 01:19 and `v1.4` (SPF report section) 01:27. So v1.2 to v1.4 were fixed **after
+confirmatory runs had started and their metrics files existed, but before the analysis code had
+been run on any real metrics and before any trained model was run on SPF data.** `rt.evaluate`
+prints a run's prior-set excess error, gap and kappa to its log, so per-run diagnostics existed
+in readable form; no verdict or H1–H3 summary had been computed. The paper states this timing.
+
+Resumed and crashed runs (PREREG section 11). Twelve runs were resumed from a checkpoint after
+an interruption (instance deletion, Mac sleep or unplugging): A-l-w4-s1, s2, s3 (from step
+10,000); A-m-w16-s0, s1, s2 (3,000); A-s-w4-s1, s2 (3,000); A-s-wfull-s2, s3 (10,000);
+A-xs-w8-s2, s3 (3,000). A resume restores model, optimiser and scheduler state, and batches are
+seeded per step, so a resumed run follows the same data stream as an uninterrupted one. One
+attempt of A-s-wfull-s2 stopped on an MPS internal error (`results/logs/A-s-wfull-s2.log`) and
+was resumed; no run failed in the end (all 96 ledger rows have return code 0).
+
+Checkpoints of A-l-w8-s0 to s4 and A-l-w4-s4, and steps 3,000 and 10,000 of A-l-w16-s0, were
+lost with a cloud instance; their evaluation CSVs had been copied and are complete.
+Cloud evaluation used TF32: re-evaluating two cloud cells in fp32 moves excess error by up to
+0.04 points and the gap by up to 2e-4, far inside the margins; Mac cells reproduce to 1e-6.
