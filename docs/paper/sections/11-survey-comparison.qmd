@@ -1,0 +1,25 @@
+# An illustrative comparison with professional forecasters {#sec-spf}
+
+This section is illustrative. The pre-registration listed it as a droppable exploratory arm with the statement that nothing in it is a test: real series are not AR(1), and the networks never saw them. Its rules were frozen at {{< var prereg.tag.v13.name >}}, before any trained model was run on survey data (@sec-prereg).
+
+## Construction
+
+Real-time histories of the variables of the Survey of Professional Forecasters studied by @bordalo2020overreaction were fed to the Family B size-l networks, and the error-on-revision coefficient b of the networks' forecasts was set beside the b of the survey's consensus forecast on the same variable-quarters. The variables are nominal GDP, real GDP, the GDP deflator, the consumer price index, unemployment, the three-month Treasury bill rate and the ten-year Treasury yield, over the survey sample {{< var spf.sample >}}. The series fed to a network are first differences of the real-time levels of the vintage available at the survey date (annualised quarterly growth for the first four variables, changes for the last three), standardised by their mean and standard deviation over observations dated before the forecast, so that no later information enters the scaling. The survey target, the forecast three quarters ahead and its revision from the previous survey, maps to the networks' horizons 1 to 5, within their {{< var design.horizons >}}.
+
+Two rules frozen with the arm limit what is printed. Histories are strictly real-time: a history must be the vintage of the survey date itself, never completed from a later vintage, which removes some quarters and starts the consumer-price comparison late. And a variable-window cell is omitted if more than {{< var spf.cell_limit_pct >}}% of its variable-quarters contain a standardised value outside the central range of the Family B training data; the survey's b is computed on the same reduced quarters as the model's. One cell is omitted under the second rule, {{< var spf.omitted.cell >}}, with {{< var spf.omitted.pct >}}% of its quarters out of range, which leaves {{< var spf.n_cells >}} cells.
+
+```{=latex}
+\begingroup\footnotesize\raggedright\setstretch{1}
+```
+
+{{< include _generated/tables/spf.md >}}
+
+```{=latex}
+\endgroup
+```
+
+## What the table shows, and what it cannot
+
+The networks match the survey in sign and size only for nominal GDP with the full window, where the model's b is {{< var spf.ngdp.full.model >}} against the survey's {{< var spf.ngdp.full.survey >}}; even there the three seeds differ widely (@tbl-spf). Elsewhere the two disagree. The survey's consensus b is positive for {{< var spf.n_survey_positive >}} of the {{< var spf.n_variables >}} variables, the underreaction of @coibion2015information, while the networks' b is negative in {{< var spf.n_model_negative >}} of the {{< var spf.n_cells >}} cells; the two share a sign in {{< var spf.n_same_sign >}} cells.
+
+Two things could produce that disagreement without any bias on either side, and nothing here separates them. Real macroeconomic series are not draws from the networks' training prior: they are not AR(1) in first differences with a fixed coefficient, and a forecaster that is optimal for Family B need not be well calibrated on them. And the survey's b is a consensus coefficient, which is positive under dispersed information even when every individual forecaster is rational, whereas each network is a single forecaster given the public history. The table says nothing about whether professional forecasters over- or underreact relative to what they know, and one match among {{< var spf.n_cells >}} cells should not be read as one. Its use is as a reminder of how far the controlled setting of this paper is from the data on which the diagnostics are usually run.

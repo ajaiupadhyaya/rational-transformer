@@ -1,0 +1,813 @@
+key,source,locator,fmt
+meta.date,analysis/paper_build.py,PAPER_DATE,date
+meta.repo_url,docs/DECISIONS.md,entry: repository made public,text
+meta.repo_short,docs/DECISIONS.md,entry: repository made public,text
+meta.doi,analysis/paper_build.py,DOI (reserved),text
+meta.licence.code,LICENSE,title,text
+meta.licence.text,analysis/paper_build.py,"licence of text, results and figures",text
+meta.public_date,docs/DECISIONS.md,entry: repository made public,date
+meta.public_time,docs/DECISIONS.md,entry: repository made public,text
+design.size.xs.layers,configs/grid.json,sizes.xs[0],int
+design.size.xs.d,configs/grid.json,sizes.xs[1],int
+design.size.xs.heads,configs/grid.json,sizes.xs[2],int
+design.size.xs.params,rt/model.py,"parameter count of build_model(cfg, xs)",int
+design.size.s.layers,configs/grid.json,sizes.s[0],int
+design.size.s.d,configs/grid.json,sizes.s[1],int
+design.size.s.heads,configs/grid.json,sizes.s[2],int
+design.size.s.params,rt/model.py,"parameter count of build_model(cfg, s)",int
+design.size.m.layers,configs/grid.json,sizes.m[0],int
+design.size.m.d,configs/grid.json,sizes.m[1],int
+design.size.m.heads,configs/grid.json,sizes.m[2],int
+design.size.m.params,rt/model.py,"parameter count of build_model(cfg, m)",int
+design.size.l.layers,configs/grid.json,sizes.l[0],int
+design.size.l.d,configs/grid.json,sizes.l[1],int
+design.size.l.heads,configs/grid.json,sizes.l[2],int
+design.size.l.params,rt/model.py,"parameter count of build_model(cfg, l)",int
+design.n_sizes,configs/grid.json,len(sizes),int
+design.n_windows,configs/grid.json,len(windows),int
+design.windows_finite,configs/grid.json,windows,text
+design.n_seeds,configs/grid.json,len(seeds),int
+design.seeds,configs/grid.json,seeds,text
+design.t_max,configs/grid.json,t_max,int
+design.t_sim,configs/grid.json,t_max + horizons,int
+design.horizons,configs/grid.json,horizons,int
+design.eval_t_first,rt/sim.py,T_EVAL,int
+design.eval_t_last,rt/sim.py,T_EVAL,int
+design.eval_n_origins,rt/sim.py,len(T_EVAL),int
+design.lr,configs/grid.json,lr,text
+design.weight_decay,configs/grid.json,weight_decay,text
+design.beta1,configs/grid.json,betas[0],text
+design.beta2,configs/grid.json,betas[1],text
+design.warmup,configs/grid.json,warmup_steps,int
+design.steps,configs/grid.json,max_steps,int
+design.steps_long,docs/PREREG.md,"section 6: 60,000",int
+design.batch,configs/grid.json,batch_size,int
+design.checkpoints,configs/grid.json,checkpoints,text
+design.n_checkpoints,configs/grid.json,len(checkpoints),int
+design.step_early,configs/grid.json,checkpoints[0],int
+design.step_mid,configs/grid.json,checkpoints[1],int
+design.checkpoints_planned,docs/PREREG.md,section 3 table,text
+design.n_checkpoints_planned,docs/PREREG.md,section 3 table,int
+design.eval_n_rho,configs/grid.json,eval_n_per_rho,int
+design.eval_n_prior,configs/grid.json,eval_n_prior,int
+design.eval_pairs_rho,configs/grid.json,eval_n_per_rho x 40 origins,int
+design.eval_pairs_prior,configs/grid.json,eval_n_prior x 40 origins,int
+design.n_rho,rt/sim.py,len(RHOS),int
+design.rho_grid,rt/sim.py,RHOS,text
+design.grid_points,rt/evaluate.py,Bayes rho grid (DECISIONS 2026-11-16),int
+design.margin.gap,analysis/summary.py,MARGINS.gap,text
+design.margin.mse,analysis/summary.py,MARGINS.excess_mse_pct,text
+design.h3.threshold,analysis/hypotheses.py,H3_MARGIN,text
+design.h3.k,results/hypotheses.json,h3.denominator,int
+design.h3.level_pct,results/hypotheses.json,1 - 0.05 / h3.denominator,text
+design.h3.t_adj,results/hypotheses.json,h3.bonferroni_t_n5,text
+design.t95.df4,scipy,"t.ppf(0.975, 4)",text
+design.t95.df2,scipy,"t.ppf(0.975, 2)",text
+design.n_verdicts_h1,results/hypotheses.json,len(h1.rows),int
+design.conv_tol_pct,configs/grid.json,convergence.rel_tol,text
+design.b.a,rt/sim.py,B_PRIOR.a,text
+design.b.b,rt/sim.py,B_PRIOR.b,text
+design.b.k,rt/sim.py,B_PRIOR.k,text
+design.runs.configured,rt/sweep.py,len(grid(cfg)),int
+design.runs.configured_a,rt/sweep.py,family A cells,int
+design.runs.configured_b,rt/sweep.py,family B cells,int
+runs.planned,results/hypotheses.json,coverage.planned,int
+runs.complete,results/hypotheses.json,coverage.complete,int
+runs.not_run_by_design,results/hypotheses.json,len(coverage.not_run_by_design),int
+runs.missing,results/hypotheses.json,len(coverage.missing),int
+runs.incomplete,results/hypotheses.json,len(coverage.incomplete),int
+runs.primary,results/hypotheses.json,"runs with family A, size l",int
+runs.m_seeds,analysis/summary.py,PLAN_A size m,int
+runs.b_seeds,analysis/summary.py,PLAN_A family B,int
+prereg.code_hash,results/gate.json,code_hash,text
+prereg.code_hash_short,results/gate.json,code_hash[:8],text
+prereg.signoff_date,docs/DECISIONS.md,entry: owner sign-off,date
+prereg.tag.v1.name,git,tag prereg-v1,text
+prereg.tag.v1.commit,git,tag prereg-v1 commit,text
+prereg.tag.v1.utc,git,"tag prereg-v1 tagger date, UTC",text
+prereg.tag.v1.time,git,"tag prereg-v1 tagger time, UTC",text
+prereg.tag.v11.name,git,tag prereg-v1.1,text
+prereg.tag.v11.commit,git,tag prereg-v1.1 commit,text
+prereg.tag.v11.utc,git,"tag prereg-v1.1 tagger date, UTC",text
+prereg.tag.v11.time,git,"tag prereg-v1.1 tagger time, UTC",text
+prereg.tag.v12.name,git,tag prereg-v1.2,text
+prereg.tag.v12.commit,git,tag prereg-v1.2 commit,text
+prereg.tag.v12.utc,git,"tag prereg-v1.2 tagger date, UTC",text
+prereg.tag.v12.time,git,"tag prereg-v1.2 tagger time, UTC",text
+prereg.tag.v13.name,git,tag prereg-v1.3,text
+prereg.tag.v13.commit,git,tag prereg-v1.3 commit,text
+prereg.tag.v13.utc,git,"tag prereg-v1.3 tagger date, UTC",text
+prereg.tag.v13.time,git,"tag prereg-v1.3 tagger time, UTC",text
+prereg.tag.v14.name,git,tag prereg-v1.4,text
+prereg.tag.v14.commit,git,tag prereg-v1.4 commit,text
+prereg.tag.v14.utc,git,"tag prereg-v1.4 tagger date, UTC",text
+prereg.tag.v14.time,git,"tag prereg-v1.4 tagger time, UTC",text
+prereg.first_tag,git,tag,text
+prereg.last_tag,git,tag,text
+prereg.hash_v1_short,docs/DECISIONS.md,entry: owner sign-off,text
+ledger.n_rows,results/ledger.csv; results/cloud/ledger*.csv,rows,int
+ledger.n_mps,results/ledger.csv,device == mps,int
+ledger.n_cuda,results/cloud/ledger*.csv,device == cuda,int
+ledger.n_failed,ledgers,returncode != 0,int
+ledger.first_start,results/ledger.csv,min start_iso,text
+ledger.first_start_time,results/ledger.csv,min start_iso,text
+ledger.first_end_time,results/ledger.csv,end of first run,text
+ledger.first_cell,results/ledger.csv,first run,text
+ledger.last_end,ledgers,max end_iso,text
+ledger.hours_mps,results/ledger.csv,sum seconds / 3600,text
+ledger.hours_cuda,results/cloud/ledger*.csv,sum seconds / 3600,text
+cost.total_usd,docs/DECISIONS.md,entry: sweep spend,text
+cost.rate_usd,docs/DECISIONS.md,entry: sweep spend,text
+cost.n_instances,docs/DECISIONS.md,entry: sweep spend,text
+cost.instances_usd,docs/DECISIONS.md,entry: sweep spend,text
+cost.hours,docs/DECISIONS.md,entry: sweep spend,text
+cost.sweep_cap_usd,docs/DECISIONS.md,entry: sweep spend,text
+cost.cloud_cap_usd,docs/PREREG.md,section 10,text
+cost.credit_usd,docs/PREREG.md,section 10,text
+cost.hard_limit_usd,docs/DECISIONS.md,entry: sweep spend,text
+cost.lost_hours,docs/DECISIONS.md,entry: sweep spend,text
+cost.pilot_usd,docs/DECISIONS.md,entry: deviation prereg-v1.1,text
+cost.pilot_minutes,docs/DECISIONS.md,entry: cloud pilot,text
+cost.projected_hours,docs/DECISIONS.md,entry: deviation prereg-v1.1,text
+cost.sweep_hours,docs/DECISIONS.md,"sweep cap / hourly rate (12 / 0.35), GPU-hours",text
+cost.total_with_pilot_usd,docs/DECISIONS.md,"total over the four sweep instances plus the pilot estimate, if the pilot was billed separately",text
+runs.n_resumed,docs/DECISIONS.md,entry: timing of deviations (Twelve runs were resumed),int
+runs.n_lost_ckpt,docs/DECISIONS.md,entry: timing of deviations (A-l-w8-s0 to s4 and A-l-w4-s4),int
+tf32.max_mse_shift,docs/DECISIONS.md,entry: timing of deviations,text
+tf32.max_gap_shift,docs/DECISIONS.md,entry: timing of deviations (2e-4),text
+timing.analysis_commit,docs/DECISIONS.md,entry: timing of deviations,text
+timing.primary_metrics,docs/DECISIONS.md,entry: timing of deviations,text
+prefreeze.linear_r1_mse,docs/PREREG.md,section 9,text
+prefreeze.linear_r1_mse_w4,docs/PREREG.md,section 9,text
+prefreeze.affine_r1_mse,docs/PREREG.md,section 9,text
+prefreeze.affine_r1_mse_w4,docs/PREREG.md,section 9,text
+prefreeze.steps,docs/PREREG.md,"section 9 (trained 3,000 steps)",text
+prefreeze.rho0_low,docs/PREREG.md,section 8,text
+prefreeze.rho0_high,docs/PREREG.md,section 8,text
+h1.decision,results/hypotheses.json,h1.decision,decision
+h1.n_equivalent,results/hypotheses.json,h1.rows[verdict == equivalent],int
+h1.n_total,results/hypotheses.json,len(h1.rows),int
+h1.mse.min_lo,results/summary.csv,"A,l,full,30000,h=1,bayes,excess_mse_pct: min lo",coef
+h1.mse.max_hi,results/summary.csv,"A,l,full,30000,h=1,bayes,excess_mse_pct: max hi",coef
+h1.mse.max_abs_end,results/summary.csv,"A,l,full,30000,h=1,bayes,excess_mse_pct: widest interval end",coef
+h1.mse.max_abs_end_rho,results/summary.csv,rho of the widest excess_mse_pct interval end,text
+h1.mse.margin_ratio,results/summary.csv,margin / widest excess_mse_pct interval end,text
+h1.r00.mse.mean,results/summary.csv,"A,l,full,30000,0.0,1,bayes,excess_mse_pct: mean",coef
+h1.r00.mse.lo,results/summary.csv,"A,l,full,30000,0.0,1,bayes,excess_mse_pct: lo",coef
+h1.r00.mse.hi,results/summary.csv,"A,l,full,30000,0.0,1,bayes,excess_mse_pct: hi",coef
+h1.r02.mse.mean,results/summary.csv,"A,l,full,30000,0.2,1,bayes,excess_mse_pct: mean",coef
+h1.r02.mse.lo,results/summary.csv,"A,l,full,30000,0.2,1,bayes,excess_mse_pct: lo",coef
+h1.r02.mse.hi,results/summary.csv,"A,l,full,30000,0.2,1,bayes,excess_mse_pct: hi",coef
+h1.r04.mse.mean,results/summary.csv,"A,l,full,30000,0.4,1,bayes,excess_mse_pct: mean",coef
+h1.r04.mse.lo,results/summary.csv,"A,l,full,30000,0.4,1,bayes,excess_mse_pct: lo",coef
+h1.r04.mse.hi,results/summary.csv,"A,l,full,30000,0.4,1,bayes,excess_mse_pct: hi",coef
+h1.r06.mse.mean,results/summary.csv,"A,l,full,30000,0.6,1,bayes,excess_mse_pct: mean",coef
+h1.r06.mse.lo,results/summary.csv,"A,l,full,30000,0.6,1,bayes,excess_mse_pct: lo",coef
+h1.r06.mse.hi,results/summary.csv,"A,l,full,30000,0.6,1,bayes,excess_mse_pct: hi",coef
+h1.r08.mse.mean,results/summary.csv,"A,l,full,30000,0.8,1,bayes,excess_mse_pct: mean",coef
+h1.r08.mse.lo,results/summary.csv,"A,l,full,30000,0.8,1,bayes,excess_mse_pct: lo",coef
+h1.r08.mse.hi,results/summary.csv,"A,l,full,30000,0.8,1,bayes,excess_mse_pct: hi",coef
+h1.r10.mse.mean,results/summary.csv,"A,l,full,30000,1.0,1,bayes,excess_mse_pct: mean",coef
+h1.r10.mse.lo,results/summary.csv,"A,l,full,30000,1.0,1,bayes,excess_mse_pct: lo",coef
+h1.r10.mse.hi,results/summary.csv,"A,l,full,30000,1.0,1,bayes,excess_mse_pct: hi",coef
+h1.prior.mse.mean,results/summary.csv,"A,l,full,30000,prior,1,bayes,excess_mse_pct: mean",coef
+h1.prior.mse.lo,results/summary.csv,"A,l,full,30000,prior,1,bayes,excess_mse_pct: lo",coef
+h1.prior.mse.hi,results/summary.csv,"A,l,full,30000,prior,1,bayes,excess_mse_pct: hi",coef
+h1.gap.min_lo,results/summary.csv,"A,l,full,30000,h=1,bayes,gap: min lo",coef
+h1.gap.max_hi,results/summary.csv,"A,l,full,30000,h=1,bayes,gap: max hi",coef
+h1.gap.max_abs_end,results/summary.csv,"A,l,full,30000,h=1,bayes,gap: widest interval end",coef
+h1.gap.max_abs_end_rho,results/summary.csv,rho of the widest gap interval end,text
+h1.gap.margin_ratio,results/summary.csv,margin / widest gap interval end,text
+h1.r00.gap.mean,results/summary.csv,"A,l,full,30000,0.0,1,bayes,gap: mean",coef
+h1.r00.gap.lo,results/summary.csv,"A,l,full,30000,0.0,1,bayes,gap: lo",coef
+h1.r00.gap.hi,results/summary.csv,"A,l,full,30000,0.0,1,bayes,gap: hi",coef
+h1.r02.gap.mean,results/summary.csv,"A,l,full,30000,0.2,1,bayes,gap: mean",coef
+h1.r02.gap.lo,results/summary.csv,"A,l,full,30000,0.2,1,bayes,gap: lo",coef
+h1.r02.gap.hi,results/summary.csv,"A,l,full,30000,0.2,1,bayes,gap: hi",coef
+h1.r04.gap.mean,results/summary.csv,"A,l,full,30000,0.4,1,bayes,gap: mean",coef
+h1.r04.gap.lo,results/summary.csv,"A,l,full,30000,0.4,1,bayes,gap: lo",coef
+h1.r04.gap.hi,results/summary.csv,"A,l,full,30000,0.4,1,bayes,gap: hi",coef
+h1.r06.gap.mean,results/summary.csv,"A,l,full,30000,0.6,1,bayes,gap: mean",coef
+h1.r06.gap.lo,results/summary.csv,"A,l,full,30000,0.6,1,bayes,gap: lo",coef
+h1.r06.gap.hi,results/summary.csv,"A,l,full,30000,0.6,1,bayes,gap: hi",coef
+h1.r08.gap.mean,results/summary.csv,"A,l,full,30000,0.8,1,bayes,gap: mean",coef
+h1.r08.gap.lo,results/summary.csv,"A,l,full,30000,0.8,1,bayes,gap: lo",coef
+h1.r08.gap.hi,results/summary.csv,"A,l,full,30000,0.8,1,bayes,gap: hi",coef
+h1.r10.gap.mean,results/summary.csv,"A,l,full,30000,1.0,1,bayes,gap: mean",coef
+h1.r10.gap.lo,results/summary.csv,"A,l,full,30000,1.0,1,bayes,gap: lo",coef
+h1.r10.gap.hi,results/summary.csv,"A,l,full,30000,1.0,1,bayes,gap: hi",coef
+h1.prior.gap.mean,results/summary.csv,"A,l,full,30000,prior,1,bayes,gap: mean",coef
+h1.prior.gap.lo,results/summary.csv,"A,l,full,30000,prior,1,bayes,gap: lo",coef
+h1.prior.gap.hi,results/summary.csv,"A,l,full,30000,prior,1,bayes,gap: hi",coef
+h2.w2.decision,results/hypotheses.json,h2.windows.2.decision,decision
+h2.w2.n_equivalent,results/hypotheses.json,h2.windows.2.rows[verdict == equivalent],int
+h2.w2.mse.widest_end,results/summary.csv,"A,l,2,30000,h=1,window_bayes,excess_mse_pct: widest interval end",coef
+h2.w2.mse.widest_end_rho,results/summary.csv,rho of that end,text
+h2.w2.r00.mse.mean,results/summary.csv,"A,l,2,30000,0.0,1,window_bayes,excess_mse_pct: mean",coef
+h2.w2.r00.mse.lo,results/summary.csv,"A,l,2,30000,0.0,1,window_bayes,excess_mse_pct: lo",coef
+h2.w2.r00.mse.hi,results/summary.csv,"A,l,2,30000,0.0,1,window_bayes,excess_mse_pct: hi",coef
+h2.w2.r02.mse.mean,results/summary.csv,"A,l,2,30000,0.2,1,window_bayes,excess_mse_pct: mean",coef
+h2.w2.r02.mse.lo,results/summary.csv,"A,l,2,30000,0.2,1,window_bayes,excess_mse_pct: lo",coef
+h2.w2.r02.mse.hi,results/summary.csv,"A,l,2,30000,0.2,1,window_bayes,excess_mse_pct: hi",coef
+h2.w2.r04.mse.mean,results/summary.csv,"A,l,2,30000,0.4,1,window_bayes,excess_mse_pct: mean",coef
+h2.w2.r04.mse.lo,results/summary.csv,"A,l,2,30000,0.4,1,window_bayes,excess_mse_pct: lo",coef
+h2.w2.r04.mse.hi,results/summary.csv,"A,l,2,30000,0.4,1,window_bayes,excess_mse_pct: hi",coef
+h2.w2.r06.mse.mean,results/summary.csv,"A,l,2,30000,0.6,1,window_bayes,excess_mse_pct: mean",coef
+h2.w2.r06.mse.lo,results/summary.csv,"A,l,2,30000,0.6,1,window_bayes,excess_mse_pct: lo",coef
+h2.w2.r06.mse.hi,results/summary.csv,"A,l,2,30000,0.6,1,window_bayes,excess_mse_pct: hi",coef
+h2.w2.r08.mse.mean,results/summary.csv,"A,l,2,30000,0.8,1,window_bayes,excess_mse_pct: mean",coef
+h2.w2.r08.mse.lo,results/summary.csv,"A,l,2,30000,0.8,1,window_bayes,excess_mse_pct: lo",coef
+h2.w2.r08.mse.hi,results/summary.csv,"A,l,2,30000,0.8,1,window_bayes,excess_mse_pct: hi",coef
+h2.w2.r10.mse.mean,results/summary.csv,"A,l,2,30000,1.0,1,window_bayes,excess_mse_pct: mean",coef
+h2.w2.r10.mse.lo,results/summary.csv,"A,l,2,30000,1.0,1,window_bayes,excess_mse_pct: lo",coef
+h2.w2.r10.mse.hi,results/summary.csv,"A,l,2,30000,1.0,1,window_bayes,excess_mse_pct: hi",coef
+h2.w2.prior.mse.mean,results/summary.csv,"A,l,2,30000,prior,1,window_bayes,excess_mse_pct: mean",coef
+h2.w2.prior.mse.lo,results/summary.csv,"A,l,2,30000,prior,1,window_bayes,excess_mse_pct: lo",coef
+h2.w2.prior.mse.hi,results/summary.csv,"A,l,2,30000,prior,1,window_bayes,excess_mse_pct: hi",coef
+h2.w2.gap.widest_end,results/summary.csv,"A,l,2,30000,h=1,window_bayes,gap: widest interval end",coef
+h2.w2.gap.widest_end_rho,results/summary.csv,rho of that end,text
+h2.w2.r00.gap.mean,results/summary.csv,"A,l,2,30000,0.0,1,window_bayes,gap: mean",coef
+h2.w2.r00.gap.lo,results/summary.csv,"A,l,2,30000,0.0,1,window_bayes,gap: lo",coef
+h2.w2.r00.gap.hi,results/summary.csv,"A,l,2,30000,0.0,1,window_bayes,gap: hi",coef
+h2.w2.r02.gap.mean,results/summary.csv,"A,l,2,30000,0.2,1,window_bayes,gap: mean",coef
+h2.w2.r02.gap.lo,results/summary.csv,"A,l,2,30000,0.2,1,window_bayes,gap: lo",coef
+h2.w2.r02.gap.hi,results/summary.csv,"A,l,2,30000,0.2,1,window_bayes,gap: hi",coef
+h2.w2.r04.gap.mean,results/summary.csv,"A,l,2,30000,0.4,1,window_bayes,gap: mean",coef
+h2.w2.r04.gap.lo,results/summary.csv,"A,l,2,30000,0.4,1,window_bayes,gap: lo",coef
+h2.w2.r04.gap.hi,results/summary.csv,"A,l,2,30000,0.4,1,window_bayes,gap: hi",coef
+h2.w2.r06.gap.mean,results/summary.csv,"A,l,2,30000,0.6,1,window_bayes,gap: mean",coef
+h2.w2.r06.gap.lo,results/summary.csv,"A,l,2,30000,0.6,1,window_bayes,gap: lo",coef
+h2.w2.r06.gap.hi,results/summary.csv,"A,l,2,30000,0.6,1,window_bayes,gap: hi",coef
+h2.w2.r08.gap.mean,results/summary.csv,"A,l,2,30000,0.8,1,window_bayes,gap: mean",coef
+h2.w2.r08.gap.lo,results/summary.csv,"A,l,2,30000,0.8,1,window_bayes,gap: lo",coef
+h2.w2.r08.gap.hi,results/summary.csv,"A,l,2,30000,0.8,1,window_bayes,gap: hi",coef
+h2.w2.r10.gap.mean,results/summary.csv,"A,l,2,30000,1.0,1,window_bayes,gap: mean",coef
+h2.w2.r10.gap.lo,results/summary.csv,"A,l,2,30000,1.0,1,window_bayes,gap: lo",coef
+h2.w2.r10.gap.hi,results/summary.csv,"A,l,2,30000,1.0,1,window_bayes,gap: hi",coef
+h2.w2.prior.gap.mean,results/summary.csv,"A,l,2,30000,prior,1,window_bayes,gap: mean",coef
+h2.w2.prior.gap.lo,results/summary.csv,"A,l,2,30000,prior,1,window_bayes,gap: lo",coef
+h2.w2.prior.gap.hi,results/summary.csv,"A,l,2,30000,prior,1,window_bayes,gap: hi",coef
+h2.w4.decision,results/hypotheses.json,h2.windows.4.decision,decision
+h2.w4.n_equivalent,results/hypotheses.json,h2.windows.4.rows[verdict == equivalent],int
+h2.w4.mse.widest_end,results/summary.csv,"A,l,4,30000,h=1,window_bayes,excess_mse_pct: widest interval end",coef
+h2.w4.mse.widest_end_rho,results/summary.csv,rho of that end,text
+h2.w4.r00.mse.mean,results/summary.csv,"A,l,4,30000,0.0,1,window_bayes,excess_mse_pct: mean",coef
+h2.w4.r00.mse.lo,results/summary.csv,"A,l,4,30000,0.0,1,window_bayes,excess_mse_pct: lo",coef
+h2.w4.r00.mse.hi,results/summary.csv,"A,l,4,30000,0.0,1,window_bayes,excess_mse_pct: hi",coef
+h2.w4.r02.mse.mean,results/summary.csv,"A,l,4,30000,0.2,1,window_bayes,excess_mse_pct: mean",coef
+h2.w4.r02.mse.lo,results/summary.csv,"A,l,4,30000,0.2,1,window_bayes,excess_mse_pct: lo",coef
+h2.w4.r02.mse.hi,results/summary.csv,"A,l,4,30000,0.2,1,window_bayes,excess_mse_pct: hi",coef
+h2.w4.r04.mse.mean,results/summary.csv,"A,l,4,30000,0.4,1,window_bayes,excess_mse_pct: mean",coef
+h2.w4.r04.mse.lo,results/summary.csv,"A,l,4,30000,0.4,1,window_bayes,excess_mse_pct: lo",coef
+h2.w4.r04.mse.hi,results/summary.csv,"A,l,4,30000,0.4,1,window_bayes,excess_mse_pct: hi",coef
+h2.w4.r06.mse.mean,results/summary.csv,"A,l,4,30000,0.6,1,window_bayes,excess_mse_pct: mean",coef
+h2.w4.r06.mse.lo,results/summary.csv,"A,l,4,30000,0.6,1,window_bayes,excess_mse_pct: lo",coef
+h2.w4.r06.mse.hi,results/summary.csv,"A,l,4,30000,0.6,1,window_bayes,excess_mse_pct: hi",coef
+h2.w4.r08.mse.mean,results/summary.csv,"A,l,4,30000,0.8,1,window_bayes,excess_mse_pct: mean",coef
+h2.w4.r08.mse.lo,results/summary.csv,"A,l,4,30000,0.8,1,window_bayes,excess_mse_pct: lo",coef
+h2.w4.r08.mse.hi,results/summary.csv,"A,l,4,30000,0.8,1,window_bayes,excess_mse_pct: hi",coef
+h2.w4.r10.mse.mean,results/summary.csv,"A,l,4,30000,1.0,1,window_bayes,excess_mse_pct: mean",coef
+h2.w4.r10.mse.lo,results/summary.csv,"A,l,4,30000,1.0,1,window_bayes,excess_mse_pct: lo",coef
+h2.w4.r10.mse.hi,results/summary.csv,"A,l,4,30000,1.0,1,window_bayes,excess_mse_pct: hi",coef
+h2.w4.prior.mse.mean,results/summary.csv,"A,l,4,30000,prior,1,window_bayes,excess_mse_pct: mean",coef
+h2.w4.prior.mse.lo,results/summary.csv,"A,l,4,30000,prior,1,window_bayes,excess_mse_pct: lo",coef
+h2.w4.prior.mse.hi,results/summary.csv,"A,l,4,30000,prior,1,window_bayes,excess_mse_pct: hi",coef
+h2.w4.gap.widest_end,results/summary.csv,"A,l,4,30000,h=1,window_bayes,gap: widest interval end",coef
+h2.w4.gap.widest_end_rho,results/summary.csv,rho of that end,text
+h2.w4.r00.gap.mean,results/summary.csv,"A,l,4,30000,0.0,1,window_bayes,gap: mean",coef
+h2.w4.r00.gap.lo,results/summary.csv,"A,l,4,30000,0.0,1,window_bayes,gap: lo",coef
+h2.w4.r00.gap.hi,results/summary.csv,"A,l,4,30000,0.0,1,window_bayes,gap: hi",coef
+h2.w4.r02.gap.mean,results/summary.csv,"A,l,4,30000,0.2,1,window_bayes,gap: mean",coef
+h2.w4.r02.gap.lo,results/summary.csv,"A,l,4,30000,0.2,1,window_bayes,gap: lo",coef
+h2.w4.r02.gap.hi,results/summary.csv,"A,l,4,30000,0.2,1,window_bayes,gap: hi",coef
+h2.w4.r04.gap.mean,results/summary.csv,"A,l,4,30000,0.4,1,window_bayes,gap: mean",coef
+h2.w4.r04.gap.lo,results/summary.csv,"A,l,4,30000,0.4,1,window_bayes,gap: lo",coef
+h2.w4.r04.gap.hi,results/summary.csv,"A,l,4,30000,0.4,1,window_bayes,gap: hi",coef
+h2.w4.r06.gap.mean,results/summary.csv,"A,l,4,30000,0.6,1,window_bayes,gap: mean",coef
+h2.w4.r06.gap.lo,results/summary.csv,"A,l,4,30000,0.6,1,window_bayes,gap: lo",coef
+h2.w4.r06.gap.hi,results/summary.csv,"A,l,4,30000,0.6,1,window_bayes,gap: hi",coef
+h2.w4.r08.gap.mean,results/summary.csv,"A,l,4,30000,0.8,1,window_bayes,gap: mean",coef
+h2.w4.r08.gap.lo,results/summary.csv,"A,l,4,30000,0.8,1,window_bayes,gap: lo",coef
+h2.w4.r08.gap.hi,results/summary.csv,"A,l,4,30000,0.8,1,window_bayes,gap: hi",coef
+h2.w4.r10.gap.mean,results/summary.csv,"A,l,4,30000,1.0,1,window_bayes,gap: mean",coef
+h2.w4.r10.gap.lo,results/summary.csv,"A,l,4,30000,1.0,1,window_bayes,gap: lo",coef
+h2.w4.r10.gap.hi,results/summary.csv,"A,l,4,30000,1.0,1,window_bayes,gap: hi",coef
+h2.w4.prior.gap.mean,results/summary.csv,"A,l,4,30000,prior,1,window_bayes,gap: mean",coef
+h2.w4.prior.gap.lo,results/summary.csv,"A,l,4,30000,prior,1,window_bayes,gap: lo",coef
+h2.w4.prior.gap.hi,results/summary.csv,"A,l,4,30000,prior,1,window_bayes,gap: hi",coef
+h2.w8.decision,results/hypotheses.json,h2.windows.8.decision,decision
+h2.w8.n_equivalent,results/hypotheses.json,h2.windows.8.rows[verdict == equivalent],int
+h2.w8.mse.widest_end,results/summary.csv,"A,l,8,30000,h=1,window_bayes,excess_mse_pct: widest interval end",coef
+h2.w8.mse.widest_end_rho,results/summary.csv,rho of that end,text
+h2.w8.r00.mse.mean,results/summary.csv,"A,l,8,30000,0.0,1,window_bayes,excess_mse_pct: mean",coef
+h2.w8.r00.mse.lo,results/summary.csv,"A,l,8,30000,0.0,1,window_bayes,excess_mse_pct: lo",coef
+h2.w8.r00.mse.hi,results/summary.csv,"A,l,8,30000,0.0,1,window_bayes,excess_mse_pct: hi",coef
+h2.w8.r02.mse.mean,results/summary.csv,"A,l,8,30000,0.2,1,window_bayes,excess_mse_pct: mean",coef
+h2.w8.r02.mse.lo,results/summary.csv,"A,l,8,30000,0.2,1,window_bayes,excess_mse_pct: lo",coef
+h2.w8.r02.mse.hi,results/summary.csv,"A,l,8,30000,0.2,1,window_bayes,excess_mse_pct: hi",coef
+h2.w8.r04.mse.mean,results/summary.csv,"A,l,8,30000,0.4,1,window_bayes,excess_mse_pct: mean",coef
+h2.w8.r04.mse.lo,results/summary.csv,"A,l,8,30000,0.4,1,window_bayes,excess_mse_pct: lo",coef
+h2.w8.r04.mse.hi,results/summary.csv,"A,l,8,30000,0.4,1,window_bayes,excess_mse_pct: hi",coef
+h2.w8.r06.mse.mean,results/summary.csv,"A,l,8,30000,0.6,1,window_bayes,excess_mse_pct: mean",coef
+h2.w8.r06.mse.lo,results/summary.csv,"A,l,8,30000,0.6,1,window_bayes,excess_mse_pct: lo",coef
+h2.w8.r06.mse.hi,results/summary.csv,"A,l,8,30000,0.6,1,window_bayes,excess_mse_pct: hi",coef
+h2.w8.r08.mse.mean,results/summary.csv,"A,l,8,30000,0.8,1,window_bayes,excess_mse_pct: mean",coef
+h2.w8.r08.mse.lo,results/summary.csv,"A,l,8,30000,0.8,1,window_bayes,excess_mse_pct: lo",coef
+h2.w8.r08.mse.hi,results/summary.csv,"A,l,8,30000,0.8,1,window_bayes,excess_mse_pct: hi",coef
+h2.w8.r10.mse.mean,results/summary.csv,"A,l,8,30000,1.0,1,window_bayes,excess_mse_pct: mean",coef
+h2.w8.r10.mse.lo,results/summary.csv,"A,l,8,30000,1.0,1,window_bayes,excess_mse_pct: lo",coef
+h2.w8.r10.mse.hi,results/summary.csv,"A,l,8,30000,1.0,1,window_bayes,excess_mse_pct: hi",coef
+h2.w8.prior.mse.mean,results/summary.csv,"A,l,8,30000,prior,1,window_bayes,excess_mse_pct: mean",coef
+h2.w8.prior.mse.lo,results/summary.csv,"A,l,8,30000,prior,1,window_bayes,excess_mse_pct: lo",coef
+h2.w8.prior.mse.hi,results/summary.csv,"A,l,8,30000,prior,1,window_bayes,excess_mse_pct: hi",coef
+h2.w8.gap.widest_end,results/summary.csv,"A,l,8,30000,h=1,window_bayes,gap: widest interval end",coef
+h2.w8.gap.widest_end_rho,results/summary.csv,rho of that end,text
+h2.w8.r00.gap.mean,results/summary.csv,"A,l,8,30000,0.0,1,window_bayes,gap: mean",coef
+h2.w8.r00.gap.lo,results/summary.csv,"A,l,8,30000,0.0,1,window_bayes,gap: lo",coef
+h2.w8.r00.gap.hi,results/summary.csv,"A,l,8,30000,0.0,1,window_bayes,gap: hi",coef
+h2.w8.r02.gap.mean,results/summary.csv,"A,l,8,30000,0.2,1,window_bayes,gap: mean",coef
+h2.w8.r02.gap.lo,results/summary.csv,"A,l,8,30000,0.2,1,window_bayes,gap: lo",coef
+h2.w8.r02.gap.hi,results/summary.csv,"A,l,8,30000,0.2,1,window_bayes,gap: hi",coef
+h2.w8.r04.gap.mean,results/summary.csv,"A,l,8,30000,0.4,1,window_bayes,gap: mean",coef
+h2.w8.r04.gap.lo,results/summary.csv,"A,l,8,30000,0.4,1,window_bayes,gap: lo",coef
+h2.w8.r04.gap.hi,results/summary.csv,"A,l,8,30000,0.4,1,window_bayes,gap: hi",coef
+h2.w8.r06.gap.mean,results/summary.csv,"A,l,8,30000,0.6,1,window_bayes,gap: mean",coef
+h2.w8.r06.gap.lo,results/summary.csv,"A,l,8,30000,0.6,1,window_bayes,gap: lo",coef
+h2.w8.r06.gap.hi,results/summary.csv,"A,l,8,30000,0.6,1,window_bayes,gap: hi",coef
+h2.w8.r08.gap.mean,results/summary.csv,"A,l,8,30000,0.8,1,window_bayes,gap: mean",coef
+h2.w8.r08.gap.lo,results/summary.csv,"A,l,8,30000,0.8,1,window_bayes,gap: lo",coef
+h2.w8.r08.gap.hi,results/summary.csv,"A,l,8,30000,0.8,1,window_bayes,gap: hi",coef
+h2.w8.r10.gap.mean,results/summary.csv,"A,l,8,30000,1.0,1,window_bayes,gap: mean",coef
+h2.w8.r10.gap.lo,results/summary.csv,"A,l,8,30000,1.0,1,window_bayes,gap: lo",coef
+h2.w8.r10.gap.hi,results/summary.csv,"A,l,8,30000,1.0,1,window_bayes,gap: hi",coef
+h2.w8.prior.gap.mean,results/summary.csv,"A,l,8,30000,prior,1,window_bayes,gap: mean",coef
+h2.w8.prior.gap.lo,results/summary.csv,"A,l,8,30000,prior,1,window_bayes,gap: lo",coef
+h2.w8.prior.gap.hi,results/summary.csv,"A,l,8,30000,prior,1,window_bayes,gap: hi",coef
+h2.w16.decision,results/hypotheses.json,h2.windows.16.decision,decision
+h2.w16.n_equivalent,results/hypotheses.json,h2.windows.16.rows[verdict == equivalent],int
+h2.w16.mse.widest_end,results/summary.csv,"A,l,16,30000,h=1,window_bayes,excess_mse_pct: widest interval end",coef
+h2.w16.mse.widest_end_rho,results/summary.csv,rho of that end,text
+h2.w16.r00.mse.mean,results/summary.csv,"A,l,16,30000,0.0,1,window_bayes,excess_mse_pct: mean",coef
+h2.w16.r00.mse.lo,results/summary.csv,"A,l,16,30000,0.0,1,window_bayes,excess_mse_pct: lo",coef
+h2.w16.r00.mse.hi,results/summary.csv,"A,l,16,30000,0.0,1,window_bayes,excess_mse_pct: hi",coef
+h2.w16.r02.mse.mean,results/summary.csv,"A,l,16,30000,0.2,1,window_bayes,excess_mse_pct: mean",coef
+h2.w16.r02.mse.lo,results/summary.csv,"A,l,16,30000,0.2,1,window_bayes,excess_mse_pct: lo",coef
+h2.w16.r02.mse.hi,results/summary.csv,"A,l,16,30000,0.2,1,window_bayes,excess_mse_pct: hi",coef
+h2.w16.r04.mse.mean,results/summary.csv,"A,l,16,30000,0.4,1,window_bayes,excess_mse_pct: mean",coef
+h2.w16.r04.mse.lo,results/summary.csv,"A,l,16,30000,0.4,1,window_bayes,excess_mse_pct: lo",coef
+h2.w16.r04.mse.hi,results/summary.csv,"A,l,16,30000,0.4,1,window_bayes,excess_mse_pct: hi",coef
+h2.w16.r06.mse.mean,results/summary.csv,"A,l,16,30000,0.6,1,window_bayes,excess_mse_pct: mean",coef
+h2.w16.r06.mse.lo,results/summary.csv,"A,l,16,30000,0.6,1,window_bayes,excess_mse_pct: lo",coef
+h2.w16.r06.mse.hi,results/summary.csv,"A,l,16,30000,0.6,1,window_bayes,excess_mse_pct: hi",coef
+h2.w16.r08.mse.mean,results/summary.csv,"A,l,16,30000,0.8,1,window_bayes,excess_mse_pct: mean",coef
+h2.w16.r08.mse.lo,results/summary.csv,"A,l,16,30000,0.8,1,window_bayes,excess_mse_pct: lo",coef
+h2.w16.r08.mse.hi,results/summary.csv,"A,l,16,30000,0.8,1,window_bayes,excess_mse_pct: hi",coef
+h2.w16.r10.mse.mean,results/summary.csv,"A,l,16,30000,1.0,1,window_bayes,excess_mse_pct: mean",coef
+h2.w16.r10.mse.lo,results/summary.csv,"A,l,16,30000,1.0,1,window_bayes,excess_mse_pct: lo",coef
+h2.w16.r10.mse.hi,results/summary.csv,"A,l,16,30000,1.0,1,window_bayes,excess_mse_pct: hi",coef
+h2.w16.prior.mse.mean,results/summary.csv,"A,l,16,30000,prior,1,window_bayes,excess_mse_pct: mean",coef
+h2.w16.prior.mse.lo,results/summary.csv,"A,l,16,30000,prior,1,window_bayes,excess_mse_pct: lo",coef
+h2.w16.prior.mse.hi,results/summary.csv,"A,l,16,30000,prior,1,window_bayes,excess_mse_pct: hi",coef
+h2.w16.gap.widest_end,results/summary.csv,"A,l,16,30000,h=1,window_bayes,gap: widest interval end",coef
+h2.w16.gap.widest_end_rho,results/summary.csv,rho of that end,text
+h2.w16.r00.gap.mean,results/summary.csv,"A,l,16,30000,0.0,1,window_bayes,gap: mean",coef
+h2.w16.r00.gap.lo,results/summary.csv,"A,l,16,30000,0.0,1,window_bayes,gap: lo",coef
+h2.w16.r00.gap.hi,results/summary.csv,"A,l,16,30000,0.0,1,window_bayes,gap: hi",coef
+h2.w16.r02.gap.mean,results/summary.csv,"A,l,16,30000,0.2,1,window_bayes,gap: mean",coef
+h2.w16.r02.gap.lo,results/summary.csv,"A,l,16,30000,0.2,1,window_bayes,gap: lo",coef
+h2.w16.r02.gap.hi,results/summary.csv,"A,l,16,30000,0.2,1,window_bayes,gap: hi",coef
+h2.w16.r04.gap.mean,results/summary.csv,"A,l,16,30000,0.4,1,window_bayes,gap: mean",coef
+h2.w16.r04.gap.lo,results/summary.csv,"A,l,16,30000,0.4,1,window_bayes,gap: lo",coef
+h2.w16.r04.gap.hi,results/summary.csv,"A,l,16,30000,0.4,1,window_bayes,gap: hi",coef
+h2.w16.r06.gap.mean,results/summary.csv,"A,l,16,30000,0.6,1,window_bayes,gap: mean",coef
+h2.w16.r06.gap.lo,results/summary.csv,"A,l,16,30000,0.6,1,window_bayes,gap: lo",coef
+h2.w16.r06.gap.hi,results/summary.csv,"A,l,16,30000,0.6,1,window_bayes,gap: hi",coef
+h2.w16.r08.gap.mean,results/summary.csv,"A,l,16,30000,0.8,1,window_bayes,gap: mean",coef
+h2.w16.r08.gap.lo,results/summary.csv,"A,l,16,30000,0.8,1,window_bayes,gap: lo",coef
+h2.w16.r08.gap.hi,results/summary.csv,"A,l,16,30000,0.8,1,window_bayes,gap: hi",coef
+h2.w16.r10.gap.mean,results/summary.csv,"A,l,16,30000,1.0,1,window_bayes,gap: mean",coef
+h2.w16.r10.gap.lo,results/summary.csv,"A,l,16,30000,1.0,1,window_bayes,gap: lo",coef
+h2.w16.r10.gap.hi,results/summary.csv,"A,l,16,30000,1.0,1,window_bayes,gap: hi",coef
+h2.w16.prior.gap.mean,results/summary.csv,"A,l,16,30000,prior,1,window_bayes,gap: mean",coef
+h2.w16.prior.gap.lo,results/summary.csv,"A,l,16,30000,prior,1,window_bayes,gap: lo",coef
+h2.w16.prior.gap.hi,results/summary.csv,"A,l,16,30000,prior,1,window_bayes,gap: hi",coef
+h2.n_windows,results/hypotheses.json,len(h2.windows),int
+h2.n_total,results/hypotheses.json,len(h2.windows.W.rows),int
+h2.n_equivalent_all,results/hypotheses.json,equivalent verdicts over the four windows,int
+h2.n_total_all,results/hypotheses.json,verdicts over the four windows,int
+h2.all.mse.widest_end,results/summary.csv,"size l, W in 2..16, excess_mse_pct: widest interval end",coef
+h2.all.mse.widest_end_w,results/summary.csv,window of that end,text
+h2.all.mse.widest_end_rho,results/summary.csv,rho of that end,text
+h2.all.mse.margin_share_pct,results/summary.csv,widest end as a percentage of the margin,text
+h2.all.gap.widest_end,results/summary.csv,"size l, W in 2..16, gap: widest interval end",coef
+h2.all.gap.widest_end_w,results/summary.csv,window of that end,text
+h2.all.gap.widest_end_rho,results/summary.csv,rho of that end,text
+h2.all.gap.margin_share_pct,results/summary.csv,widest end as a percentage of the margin,text
+rho0.n_windows,results/summary.csv,"A,l,W,30000,0.0,1,matching bench,gap",int
+rho0.n_excl_zero,results/summary.csv,count with lo > 0,int
+rho0.min_mean,results/summary.csv,min mean,coef
+rho0.max_mean,results/summary.csv,max mean,coef
+rho0.max_hi,results/summary.csv,max hi,coef
+rho0.windowed.min_mean,results/summary.csv,"min mean, W in 2..16",coef
+rho0.windowed.max_mean,results/summary.csv,"max mean, W in 2..16",coef
+h3.decision,results/hypotheses.json,h3.decision,decision
+h3.statement,results/hypotheses.json,h3.statement,decision
+h3.k95,results/hypotheses.json,h3.k_positive_95,int
+h3.k_adjusted,results/hypotheses.json,h3.k_positive_adjusted,int
+h3.denominator,results/hypotheses.json,h3.denominator,int
+h3.max_hi,results/hypotheses.json,max over h3.combos of hi,coef
+h3.max_mean,results/hypotheses.json,max over h3.combos of mean,coef
+h3.min_mean,results/hypotheses.json,min over h3.combos of mean,coef
+h3.max_lo,results/hypotheses.json,max over h3.combos of lo,coef
+h3.max_lo_adj,results/hypotheses.json,max over h3.combos of lo_adj,coef
+h3.min_lo_adj,results/hypotheses.json,min over h3.combos of lo_adj,coef
+h3.n_mean_positive,results/hypotheses.json,count of h3.combos with mean > 0,int
+h3.n_incl_zero,results/hypotheses.json,count of h3.combos with lo < 0 < hi,int
+h3.threshold_over_max_hi,results/hypotheses.json,0.02 / max hi,text
+h3.max_hi_adj,results/hypotheses.json,max over h3.combos of mean + t_adj sd / sqrt(5),coef
+h3.w2.r06.mean,results/hypotheses.json,"h3.combos[window=2,rho=0.6].mean",coef
+h3.w2.r06.lo,results/hypotheses.json,"h3.combos[window=2,rho=0.6].lo",coef
+h3.w2.r06.hi,results/hypotheses.json,"h3.combos[window=2,rho=0.6].hi",coef
+h3.w2.r06.lo_adj,results/hypotheses.json,"h3.combos[window=2,rho=0.6].lo_adj",coef
+h3.w2.r08.mean,results/hypotheses.json,"h3.combos[window=2,rho=0.8].mean",coef
+h3.w2.r08.lo,results/hypotheses.json,"h3.combos[window=2,rho=0.8].lo",coef
+h3.w2.r08.hi,results/hypotheses.json,"h3.combos[window=2,rho=0.8].hi",coef
+h3.w2.r08.lo_adj,results/hypotheses.json,"h3.combos[window=2,rho=0.8].lo_adj",coef
+h3.w4.r06.mean,results/hypotheses.json,"h3.combos[window=4,rho=0.6].mean",coef
+h3.w4.r06.lo,results/hypotheses.json,"h3.combos[window=4,rho=0.6].lo",coef
+h3.w4.r06.hi,results/hypotheses.json,"h3.combos[window=4,rho=0.6].hi",coef
+h3.w4.r06.lo_adj,results/hypotheses.json,"h3.combos[window=4,rho=0.6].lo_adj",coef
+h3.w4.r08.mean,results/hypotheses.json,"h3.combos[window=4,rho=0.8].mean",coef
+h3.w4.r08.lo,results/hypotheses.json,"h3.combos[window=4,rho=0.8].lo",coef
+h3.w4.r08.hi,results/hypotheses.json,"h3.combos[window=4,rho=0.8].hi",coef
+h3.w4.r08.lo_adj,results/hypotheses.json,"h3.combos[window=4,rho=0.8].lo_adj",coef
+h3.w8.r06.mean,results/hypotheses.json,"h3.combos[window=8,rho=0.6].mean",coef
+h3.w8.r06.lo,results/hypotheses.json,"h3.combos[window=8,rho=0.6].lo",coef
+h3.w8.r06.hi,results/hypotheses.json,"h3.combos[window=8,rho=0.6].hi",coef
+h3.w8.r06.lo_adj,results/hypotheses.json,"h3.combos[window=8,rho=0.6].lo_adj",coef
+h3.w8.r08.mean,results/hypotheses.json,"h3.combos[window=8,rho=0.8].mean",coef
+h3.w8.r08.lo,results/hypotheses.json,"h3.combos[window=8,rho=0.8].lo",coef
+h3.w8.r08.hi,results/hypotheses.json,"h3.combos[window=8,rho=0.8].hi",coef
+h3.w8.r08.lo_adj,results/hypotheses.json,"h3.combos[window=8,rho=0.8].lo_adj",coef
+h3.w16.r06.mean,results/hypotheses.json,"h3.combos[window=16,rho=0.6].mean",coef
+h3.w16.r06.lo,results/hypotheses.json,"h3.combos[window=16,rho=0.6].lo",coef
+h3.w16.r06.hi,results/hypotheses.json,"h3.combos[window=16,rho=0.6].hi",coef
+h3.w16.r06.lo_adj,results/hypotheses.json,"h3.combos[window=16,rho=0.6].lo_adj",coef
+h3.w16.r08.mean,results/hypotheses.json,"h3.combos[window=16,rho=0.8].mean",coef
+h3.w16.r08.lo,results/hypotheses.json,"h3.combos[window=16,rho=0.8].lo",coef
+h3.w16.r08.hi,results/hypotheses.json,"h3.combos[window=16,rho=0.8].hi",coef
+h3.w16.r08.lo_adj,results/hypotheses.json,"h3.combos[window=16,rho=0.8].lo_adj",coef
+h3.other.k95,results/hypotheses.json,h3.other_sizes_k_positive_95,int
+h3.other.denominator,results/hypotheses.json,h3.other_sizes_denominator,int
+flagged.n,results/hypotheses.json,len(flagged),int
+size.xs.w2.equivalent,results/summary.csv,"A,xs,2,30000,h=1,matching bench: verdict == equivalent",int
+size.xs.w2.different,results/summary.csv,"A,xs,2,30000,h=1,matching bench: verdict == different",int
+size.xs.w2.inconclusive,results/summary.csv,"A,xs,2,30000,h=1,matching bench: verdict == inconclusive",int
+size.xs.w4.equivalent,results/summary.csv,"A,xs,4,30000,h=1,matching bench: verdict == equivalent",int
+size.xs.w4.different,results/summary.csv,"A,xs,4,30000,h=1,matching bench: verdict == different",int
+size.xs.w4.inconclusive,results/summary.csv,"A,xs,4,30000,h=1,matching bench: verdict == inconclusive",int
+size.xs.w8.equivalent,results/summary.csv,"A,xs,8,30000,h=1,matching bench: verdict == equivalent",int
+size.xs.w8.different,results/summary.csv,"A,xs,8,30000,h=1,matching bench: verdict == different",int
+size.xs.w8.inconclusive,results/summary.csv,"A,xs,8,30000,h=1,matching bench: verdict == inconclusive",int
+size.xs.w16.equivalent,results/summary.csv,"A,xs,16,30000,h=1,matching bench: verdict == equivalent",int
+size.xs.w16.different,results/summary.csv,"A,xs,16,30000,h=1,matching bench: verdict == different",int
+size.xs.w16.inconclusive,results/summary.csv,"A,xs,16,30000,h=1,matching bench: verdict == inconclusive",int
+size.xs.full.equivalent,results/summary.csv,"A,xs,full,30000,h=1,matching bench: verdict == equivalent",int
+size.xs.full.different,results/summary.csv,"A,xs,full,30000,h=1,matching bench: verdict == different",int
+size.xs.full.inconclusive,results/summary.csv,"A,xs,full,30000,h=1,matching bench: verdict == inconclusive",int
+size.xs.total.equivalent,results/summary.csv,"A,xs,all windows,30000,h=1: verdict == equivalent",int
+size.xs.total.different,results/summary.csv,"A,xs,all windows,30000,h=1: verdict == different",int
+size.xs.total.inconclusive,results/summary.csv,"A,xs,all windows,30000,h=1: verdict == inconclusive",int
+size.s.w2.equivalent,results/summary.csv,"A,s,2,30000,h=1,matching bench: verdict == equivalent",int
+size.s.w2.different,results/summary.csv,"A,s,2,30000,h=1,matching bench: verdict == different",int
+size.s.w2.inconclusive,results/summary.csv,"A,s,2,30000,h=1,matching bench: verdict == inconclusive",int
+size.s.w4.equivalent,results/summary.csv,"A,s,4,30000,h=1,matching bench: verdict == equivalent",int
+size.s.w4.different,results/summary.csv,"A,s,4,30000,h=1,matching bench: verdict == different",int
+size.s.w4.inconclusive,results/summary.csv,"A,s,4,30000,h=1,matching bench: verdict == inconclusive",int
+size.s.w8.equivalent,results/summary.csv,"A,s,8,30000,h=1,matching bench: verdict == equivalent",int
+size.s.w8.different,results/summary.csv,"A,s,8,30000,h=1,matching bench: verdict == different",int
+size.s.w8.inconclusive,results/summary.csv,"A,s,8,30000,h=1,matching bench: verdict == inconclusive",int
+size.s.w16.equivalent,results/summary.csv,"A,s,16,30000,h=1,matching bench: verdict == equivalent",int
+size.s.w16.different,results/summary.csv,"A,s,16,30000,h=1,matching bench: verdict == different",int
+size.s.w16.inconclusive,results/summary.csv,"A,s,16,30000,h=1,matching bench: verdict == inconclusive",int
+size.s.full.equivalent,results/summary.csv,"A,s,full,30000,h=1,matching bench: verdict == equivalent",int
+size.s.full.different,results/summary.csv,"A,s,full,30000,h=1,matching bench: verdict == different",int
+size.s.full.inconclusive,results/summary.csv,"A,s,full,30000,h=1,matching bench: verdict == inconclusive",int
+size.s.total.equivalent,results/summary.csv,"A,s,all windows,30000,h=1: verdict == equivalent",int
+size.s.total.different,results/summary.csv,"A,s,all windows,30000,h=1: verdict == different",int
+size.s.total.inconclusive,results/summary.csv,"A,s,all windows,30000,h=1: verdict == inconclusive",int
+size.m.w2.equivalent,results/summary.csv,"A,m,2,30000,h=1,matching bench: verdict == equivalent",int
+size.m.w2.different,results/summary.csv,"A,m,2,30000,h=1,matching bench: verdict == different",int
+size.m.w2.inconclusive,results/summary.csv,"A,m,2,30000,h=1,matching bench: verdict == inconclusive",int
+size.m.w4.equivalent,results/summary.csv,"A,m,4,30000,h=1,matching bench: verdict == equivalent",int
+size.m.w4.different,results/summary.csv,"A,m,4,30000,h=1,matching bench: verdict == different",int
+size.m.w4.inconclusive,results/summary.csv,"A,m,4,30000,h=1,matching bench: verdict == inconclusive",int
+size.m.w8.equivalent,results/summary.csv,"A,m,8,30000,h=1,matching bench: verdict == equivalent",int
+size.m.w8.different,results/summary.csv,"A,m,8,30000,h=1,matching bench: verdict == different",int
+size.m.w8.inconclusive,results/summary.csv,"A,m,8,30000,h=1,matching bench: verdict == inconclusive",int
+size.m.w16.equivalent,results/summary.csv,"A,m,16,30000,h=1,matching bench: verdict == equivalent",int
+size.m.w16.different,results/summary.csv,"A,m,16,30000,h=1,matching bench: verdict == different",int
+size.m.w16.inconclusive,results/summary.csv,"A,m,16,30000,h=1,matching bench: verdict == inconclusive",int
+size.m.full.equivalent,results/summary.csv,"A,m,full,30000,h=1,matching bench: verdict == equivalent",int
+size.m.full.different,results/summary.csv,"A,m,full,30000,h=1,matching bench: verdict == different",int
+size.m.full.inconclusive,results/summary.csv,"A,m,full,30000,h=1,matching bench: verdict == inconclusive",int
+size.m.total.equivalent,results/summary.csv,"A,m,all windows,30000,h=1: verdict == equivalent",int
+size.m.total.different,results/summary.csv,"A,m,all windows,30000,h=1: verdict == different",int
+size.m.total.inconclusive,results/summary.csv,"A,m,all windows,30000,h=1: verdict == inconclusive",int
+size.l.w2.equivalent,results/summary.csv,"A,l,2,30000,h=1,matching bench: verdict == equivalent",int
+size.l.w2.different,results/summary.csv,"A,l,2,30000,h=1,matching bench: verdict == different",int
+size.l.w2.inconclusive,results/summary.csv,"A,l,2,30000,h=1,matching bench: verdict == inconclusive",int
+size.l.w4.equivalent,results/summary.csv,"A,l,4,30000,h=1,matching bench: verdict == equivalent",int
+size.l.w4.different,results/summary.csv,"A,l,4,30000,h=1,matching bench: verdict == different",int
+size.l.w4.inconclusive,results/summary.csv,"A,l,4,30000,h=1,matching bench: verdict == inconclusive",int
+size.l.w8.equivalent,results/summary.csv,"A,l,8,30000,h=1,matching bench: verdict == equivalent",int
+size.l.w8.different,results/summary.csv,"A,l,8,30000,h=1,matching bench: verdict == different",int
+size.l.w8.inconclusive,results/summary.csv,"A,l,8,30000,h=1,matching bench: verdict == inconclusive",int
+size.l.w16.equivalent,results/summary.csv,"A,l,16,30000,h=1,matching bench: verdict == equivalent",int
+size.l.w16.different,results/summary.csv,"A,l,16,30000,h=1,matching bench: verdict == different",int
+size.l.w16.inconclusive,results/summary.csv,"A,l,16,30000,h=1,matching bench: verdict == inconclusive",int
+size.l.full.equivalent,results/summary.csv,"A,l,full,30000,h=1,matching bench: verdict == equivalent",int
+size.l.full.different,results/summary.csv,"A,l,full,30000,h=1,matching bench: verdict == different",int
+size.l.full.inconclusive,results/summary.csv,"A,l,full,30000,h=1,matching bench: verdict == inconclusive",int
+size.l.total.equivalent,results/summary.csv,"A,l,all windows,30000,h=1: verdict == equivalent",int
+size.l.total.different,results/summary.csv,"A,l,all windows,30000,h=1: verdict == different",int
+size.l.total.inconclusive,results/summary.csv,"A,l,all windows,30000,h=1: verdict == inconclusive",int
+size.n_per_size,results/summary.csv,12 verdicts x 5 windows,int
+size.xs.full.r00.gap.mean,results/summary.csv,"A,xs,full,30000,0.0,1,bayes,gap: mean",coef
+size.xs.full.r06.gap.mean,results/summary.csv,"A,xs,full,30000,0.6,1,bayes,gap: mean",coef
+size.xs.full.r08.gap.mean,results/summary.csv,"A,xs,full,30000,0.8,1,bayes,gap: mean",coef
+size.xs.h3.n_mean_negative,results/hypotheses.json,h3.other_sizes.xs.combos with mean < 0,int
+size.xs.h3.min_mean,results/hypotheses.json,min mean over h3.other_sizes.xs.combos,coef
+size.xs.h3.max_mean,results/hypotheses.json,max mean over h3.other_sizes.xs.combos,coef
+size.xs.max_gap_mean,results/summary.csv,"A,xs,30000,h=1,gap: max mean",coef
+size.xs.min_gap_mean,results/summary.csv,"A,xs,30000,h=1,gap: min mean",coef
+size.xs.max_mse_mean,results/summary.csv,"A,xs,30000,h=1,excess_mse_pct: max mean",coef
+trace.s3000.w2.equivalent,results/summary.csv,"A,l,2,3000,h=1,matching bench: verdict == equivalent",int
+trace.s3000.w4.equivalent,results/summary.csv,"A,l,4,3000,h=1,matching bench: verdict == equivalent",int
+trace.s3000.w8.equivalent,results/summary.csv,"A,l,8,3000,h=1,matching bench: verdict == equivalent",int
+trace.s3000.w16.equivalent,results/summary.csv,"A,l,16,3000,h=1,matching bench: verdict == equivalent",int
+trace.s3000.full.equivalent,results/summary.csv,"A,l,full,3000,h=1,matching bench: verdict == equivalent",int
+trace.s10000.w2.equivalent,results/summary.csv,"A,l,2,10000,h=1,matching bench: verdict == equivalent",int
+trace.s10000.w4.equivalent,results/summary.csv,"A,l,4,10000,h=1,matching bench: verdict == equivalent",int
+trace.s10000.w8.equivalent,results/summary.csv,"A,l,8,10000,h=1,matching bench: verdict == equivalent",int
+trace.s10000.w16.equivalent,results/summary.csv,"A,l,16,10000,h=1,matching bench: verdict == equivalent",int
+trace.s10000.full.equivalent,results/summary.csv,"A,l,full,10000,h=1,matching bench: verdict == equivalent",int
+trace.s30000.w2.equivalent,results/summary.csv,"A,l,2,30000,h=1,matching bench: verdict == equivalent",int
+trace.s30000.w4.equivalent,results/summary.csv,"A,l,4,30000,h=1,matching bench: verdict == equivalent",int
+trace.s30000.w8.equivalent,results/summary.csv,"A,l,8,30000,h=1,matching bench: verdict == equivalent",int
+trace.s30000.w16.equivalent,results/summary.csv,"A,l,16,30000,h=1,matching bench: verdict == equivalent",int
+trace.s30000.full.equivalent,results/summary.csv,"A,l,full,30000,h=1,matching bench: verdict == equivalent",int
+trace.windowed.max_equivalent_early,results/summary.csv,"max over W in 2..16 and steps 3000, 10000 of equivalent verdicts",int
+trace.windowed.max_mse_early,results/summary.csv,"max mean excess error, W in 2..16, steps 3000 and 10000, grid rho",coef
+trace.s3000.h3.n_negative,results/summary.csv,step 3000: H3 rows with mean gap < 0,int
+trace.s3000.h3.min_mean,results/summary.csv,step 3000: min mean gap on H3 rows,coef
+trace.s3000.h3.max_mean,results/summary.csv,step 3000: max mean gap on H3 rows,coef
+trace.s3000.h3.n_inconclusive,results/summary.csv,step 3000: inconclusive H3 rows,int
+trace.s10000.h3.n_negative,results/summary.csv,step 10000: H3 rows with mean gap < 0,int
+trace.s10000.h3.min_mean,results/summary.csv,step 10000: min mean gap on H3 rows,coef
+trace.s10000.h3.max_mean,results/summary.csv,step 10000: max mean gap on H3 rows,coef
+trace.s10000.h3.n_inconclusive,results/summary.csv,step 10000: inconclusive H3 rows,int
+trace.full.h3.min_mean,results/summary.csv,"full window, steps 3000 and 10000, rho 0.6 and 0.8: min mean gap",coef
+trace.full.h3.max_mean,results/summary.csv,same: max mean gap,coef
+trace.full.h3.n_incl_zero,results/summary.csv,same: intervals including zero,int
+trace.full.h3.n,results/summary.csv,same: rows,int
+conv.l.n_converged,results/hypotheses.json,"runs: family A, size l, converged",int
+conv.l.n_runs,results/hypotheses.json,"runs: family A, size l",int
+conv.all.n_converged,results/hypotheses.json,runs: converged,int
+horizons.n_verdicts,results/summary.csv,"A,l,all windows,30000,h=2..6,matching bench",int
+horizons.n_equivalent,results/summary.csv,same: verdict == equivalent,int
+horizons.max_abs_gap_mean,results/summary.csv,same: max |mean gap|,coef
+horizons.max_abs_mse_mean,results/summary.csv,same: max |mean excess error|,coef
+eor.h1.max_abs_diff,results/metrics,"size l, step 30000, h=1: max |mean(model b - benchmark b)|",coef
+eor.h1.n_rows,results/metrics,5 windows x 6 rho,int
+eor.h1.n_excl_zero,results/metrics,rows whose 95% interval excludes zero,int
+eor.all.max_abs_diff,results/metrics,h=1..5: max |mean difference|,coef
+eor.all.n_rows,results/metrics,5 windows x 5 horizons x 6 rho,int
+eor.h1.w4.r00.bench,results/metrics,"A,l,4,30000,0.0,h=1: mean bench_eor_b",coef
+eor.h1.w4.r00.model,results/metrics,"A,l,4,30000,0.0,h=1: mean eor_b",coef
+eor.h1.w4.r08.bench,results/metrics,"A,l,4,30000,0.8,h=1: mean bench_eor_b",coef
+eor.h1.w4.r08.model,results/metrics,"A,l,4,30000,0.8,h=1: mean eor_b",coef
+eor.h1.full.r00.bench,results/metrics,"A,l,full,30000,0.0,h=1: mean bench_eor_b",coef
+eor.h1.full.r00.model,results/metrics,"A,l,full,30000,0.0,h=1: mean eor_b",coef
+eor.h1.full.r08.bench,results/metrics,"A,l,full,30000,0.8,h=1: mean bench_eor_b",coef
+eor.h1.full.r08.model,results/metrics,"A,l,full,30000,0.8,h=1: mean eor_b",coef
+eor.gate.a,results/gate.json,checks.benchmark.families.A.eor_b_h1,coef
+eor.gate.b,results/gate.json,checks.benchmark.families.B.eor_b_h1,coef
+kappa.full.max_abs,results/metrics,"A,l,full,30000,h=1,bayes: max |mean kappa|",coef
+bench.fire.r00,results/hypotheses.json,"benchmarks[rho=0.0,bench=fire,window=-].implied_persistence",coef
+bench.ls.r00,results/hypotheses.json,"benchmarks[rho=0.0,bench=ls,window=-].implied_persistence",coef
+bench.bayes.r00,results/hypotheses.json,"benchmarks[rho=0.0,bench=bayes,window=-].implied_persistence",coef
+bench.w2.r00,results/hypotheses.json,"benchmarks[rho=0.0,bench=window_bayes,window=2].implied_persistence",coef
+bench.w4.r00,results/hypotheses.json,"benchmarks[rho=0.0,bench=window_bayes,window=4].implied_persistence",coef
+bench.w8.r00,results/hypotheses.json,"benchmarks[rho=0.0,bench=window_bayes,window=8].implied_persistence",coef
+bench.w16.r00,results/hypotheses.json,"benchmarks[rho=0.0,bench=window_bayes,window=16].implied_persistence",coef
+bench.fire.r02,results/hypotheses.json,"benchmarks[rho=0.2,bench=fire,window=-].implied_persistence",coef
+bench.ls.r02,results/hypotheses.json,"benchmarks[rho=0.2,bench=ls,window=-].implied_persistence",coef
+bench.bayes.r02,results/hypotheses.json,"benchmarks[rho=0.2,bench=bayes,window=-].implied_persistence",coef
+bench.w2.r02,results/hypotheses.json,"benchmarks[rho=0.2,bench=window_bayes,window=2].implied_persistence",coef
+bench.w4.r02,results/hypotheses.json,"benchmarks[rho=0.2,bench=window_bayes,window=4].implied_persistence",coef
+bench.w8.r02,results/hypotheses.json,"benchmarks[rho=0.2,bench=window_bayes,window=8].implied_persistence",coef
+bench.w16.r02,results/hypotheses.json,"benchmarks[rho=0.2,bench=window_bayes,window=16].implied_persistence",coef
+bench.fire.r04,results/hypotheses.json,"benchmarks[rho=0.4,bench=fire,window=-].implied_persistence",coef
+bench.ls.r04,results/hypotheses.json,"benchmarks[rho=0.4,bench=ls,window=-].implied_persistence",coef
+bench.bayes.r04,results/hypotheses.json,"benchmarks[rho=0.4,bench=bayes,window=-].implied_persistence",coef
+bench.w2.r04,results/hypotheses.json,"benchmarks[rho=0.4,bench=window_bayes,window=2].implied_persistence",coef
+bench.w4.r04,results/hypotheses.json,"benchmarks[rho=0.4,bench=window_bayes,window=4].implied_persistence",coef
+bench.w8.r04,results/hypotheses.json,"benchmarks[rho=0.4,bench=window_bayes,window=8].implied_persistence",coef
+bench.w16.r04,results/hypotheses.json,"benchmarks[rho=0.4,bench=window_bayes,window=16].implied_persistence",coef
+bench.fire.r06,results/hypotheses.json,"benchmarks[rho=0.6,bench=fire,window=-].implied_persistence",coef
+bench.ls.r06,results/hypotheses.json,"benchmarks[rho=0.6,bench=ls,window=-].implied_persistence",coef
+bench.bayes.r06,results/hypotheses.json,"benchmarks[rho=0.6,bench=bayes,window=-].implied_persistence",coef
+bench.w2.r06,results/hypotheses.json,"benchmarks[rho=0.6,bench=window_bayes,window=2].implied_persistence",coef
+bench.w4.r06,results/hypotheses.json,"benchmarks[rho=0.6,bench=window_bayes,window=4].implied_persistence",coef
+bench.w8.r06,results/hypotheses.json,"benchmarks[rho=0.6,bench=window_bayes,window=8].implied_persistence",coef
+bench.w16.r06,results/hypotheses.json,"benchmarks[rho=0.6,bench=window_bayes,window=16].implied_persistence",coef
+bench.fire.r08,results/hypotheses.json,"benchmarks[rho=0.8,bench=fire,window=-].implied_persistence",coef
+bench.ls.r08,results/hypotheses.json,"benchmarks[rho=0.8,bench=ls,window=-].implied_persistence",coef
+bench.bayes.r08,results/hypotheses.json,"benchmarks[rho=0.8,bench=bayes,window=-].implied_persistence",coef
+bench.w2.r08,results/hypotheses.json,"benchmarks[rho=0.8,bench=window_bayes,window=2].implied_persistence",coef
+bench.w4.r08,results/hypotheses.json,"benchmarks[rho=0.8,bench=window_bayes,window=4].implied_persistence",coef
+bench.w8.r08,results/hypotheses.json,"benchmarks[rho=0.8,bench=window_bayes,window=8].implied_persistence",coef
+bench.w16.r08,results/hypotheses.json,"benchmarks[rho=0.8,bench=window_bayes,window=16].implied_persistence",coef
+bench.fire.r10,results/hypotheses.json,"benchmarks[rho=1.0,bench=fire,window=-].implied_persistence",coef
+bench.ls.r10,results/hypotheses.json,"benchmarks[rho=1.0,bench=ls,window=-].implied_persistence",coef
+bench.bayes.r10,results/hypotheses.json,"benchmarks[rho=1.0,bench=bayes,window=-].implied_persistence",coef
+bench.w2.r10,results/hypotheses.json,"benchmarks[rho=1.0,bench=window_bayes,window=2].implied_persistence",coef
+bench.w4.r10,results/hypotheses.json,"benchmarks[rho=1.0,bench=window_bayes,window=4].implied_persistence",coef
+bench.w8.r10,results/hypotheses.json,"benchmarks[rho=1.0,bench=window_bayes,window=8].implied_persistence",coef
+bench.w16.r10,results/hypotheses.json,"benchmarks[rho=1.0,bench=window_bayes,window=16].implied_persistence",coef
+bench.fire.prior,results/hypotheses.json,"benchmarks[rho=prior,bench=fire,window=-].implied_persistence",coef
+bench.ls.prior,results/hypotheses.json,"benchmarks[rho=prior,bench=ls,window=-].implied_persistence",coef
+bench.bayes.prior,results/hypotheses.json,"benchmarks[rho=prior,bench=bayes,window=-].implied_persistence",coef
+bench.w2.prior,results/hypotheses.json,"benchmarks[rho=prior,bench=window_bayes,window=2].implied_persistence",coef
+bench.w4.prior,results/hypotheses.json,"benchmarks[rho=prior,bench=window_bayes,window=4].implied_persistence",coef
+bench.w8.prior,results/hypotheses.json,"benchmarks[rho=prior,bench=window_bayes,window=8].implied_persistence",coef
+bench.w16.prior,results/hypotheses.json,"benchmarks[rho=prior,bench=window_bayes,window=16].implied_persistence",coef
+bench.max_wb_minus_bayes,results/hypotheses.json,max over W and grid rho of window-Bayes minus Bayes implied persistence,coef
+bench.n_wb_below_truth_high,results/hypotheses.json,"window-Bayes implied persistence below rho at rho = 0.6, 0.8",int
+human.r00.ip,results/hypotheses.json,human[rho=0.0].implied_rho,coef
+human.r00.lo,results/hypotheses.json,human[rho=0.0]: implied_rho - 1.96 se,coef
+human.r00.hi,results/hypotheses.json,human[rho=0.0]: implied_rho + 1.96 se,coef
+human.r02.ip,results/hypotheses.json,human[rho=0.2].implied_rho,coef
+human.r02.lo,results/hypotheses.json,human[rho=0.2]: implied_rho - 1.96 se,coef
+human.r02.hi,results/hypotheses.json,human[rho=0.2]: implied_rho + 1.96 se,coef
+human.r04.ip,results/hypotheses.json,human[rho=0.4].implied_rho,coef
+human.r04.lo,results/hypotheses.json,human[rho=0.4]: implied_rho - 1.96 se,coef
+human.r04.hi,results/hypotheses.json,human[rho=0.4]: implied_rho + 1.96 se,coef
+human.r06.ip,results/hypotheses.json,human[rho=0.6].implied_rho,coef
+human.r06.lo,results/hypotheses.json,human[rho=0.6]: implied_rho - 1.96 se,coef
+human.r06.hi,results/hypotheses.json,human[rho=0.6]: implied_rho + 1.96 se,coef
+human.r08.ip,results/hypotheses.json,human[rho=0.8].implied_rho,coef
+human.r08.lo,results/hypotheses.json,human[rho=0.8]: implied_rho - 1.96 se,coef
+human.r08.hi,results/hypotheses.json,human[rho=0.8]: implied_rho + 1.96 se,coef
+human.r10.ip,results/hypotheses.json,human[rho=1.0].implied_rho,coef
+human.r10.lo,results/hypotheses.json,human[rho=1.0]: implied_rho - 1.96 se,coef
+human.r10.hi,results/hypotheses.json,human[rho=1.0]: implied_rho + 1.96 se,coef
+human.excess_min,results/hypotheses.json,min over rho <= 0.8 of implied_rho - rho,coef
+human.excess_max,results/hypotheses.json,max over rho <= 0.8 of implied_rho - rho,coef
+human.participants_min,results/hypotheses.json,min human.participants,int
+human.participants_max,results/hypotheses.json,max human.participants,int
+fb.full.r00.model,results/summary.csv,"B,l,full,30000,0.0,1,matching bench: implied_persistence",coef
+fb.full.r00.bench,results/summary.csv,"B,l,full,30000,0.0,1: bench_implied_persistence",coef
+fb.full.r00.bench2,results/summary.csv,"B,l,full,30000,0.0,1: bench_implied_persistence",coef
+fb.full.r02.model,results/summary.csv,"B,l,full,30000,0.2,1,matching bench: implied_persistence",coef
+fb.full.r02.bench,results/summary.csv,"B,l,full,30000,0.2,1: bench_implied_persistence",coef
+fb.full.r02.bench2,results/summary.csv,"B,l,full,30000,0.2,1: bench_implied_persistence",coef
+fb.full.r04.model,results/summary.csv,"B,l,full,30000,0.4,1,matching bench: implied_persistence",coef
+fb.full.r04.bench,results/summary.csv,"B,l,full,30000,0.4,1: bench_implied_persistence",coef
+fb.full.r04.bench2,results/summary.csv,"B,l,full,30000,0.4,1: bench_implied_persistence",coef
+fb.full.r06.model,results/summary.csv,"B,l,full,30000,0.6,1,matching bench: implied_persistence",coef
+fb.full.r06.bench,results/summary.csv,"B,l,full,30000,0.6,1: bench_implied_persistence",coef
+fb.full.r06.bench2,results/summary.csv,"B,l,full,30000,0.6,1: bench_implied_persistence",coef
+fb.full.r08.model,results/summary.csv,"B,l,full,30000,0.8,1,matching bench: implied_persistence",coef
+fb.full.r08.bench,results/summary.csv,"B,l,full,30000,0.8,1: bench_implied_persistence",coef
+fb.full.r08.bench2,results/summary.csv,"B,l,full,30000,0.8,1: bench_implied_persistence",coef
+fb.full.r10.model,results/summary.csv,"B,l,full,30000,1.0,1,matching bench: implied_persistence",coef
+fb.full.r10.bench,results/summary.csv,"B,l,full,30000,1.0,1: bench_implied_persistence",coef
+fb.full.r10.bench2,results/summary.csv,"B,l,full,30000,1.0,1: bench_implied_persistence",coef
+fb.full.prior.model,results/summary.csv,"B,l,full,30000,prior,1,matching bench: implied_persistence",coef
+fb.full.prior.bench,results/summary.csv,"B,l,full,30000,prior,1: bench_implied_persistence",coef
+fb.full.prior.bench2,results/summary.csv,"B,l,full,30000,prior,1: bench_implied_persistence",coef
+fb.w4.r00.model,results/summary.csv,"B,l,4,30000,0.0,1,matching bench: implied_persistence",coef
+fb.w4.r00.bench,results/summary.csv,"B,l,4,30000,0.0,1: bench_implied_persistence",coef
+fb.w4.r00.bench2,results/summary.csv,"B,l,4,30000,0.0,1: bench_implied_persistence",coef
+fb.w4.r02.model,results/summary.csv,"B,l,4,30000,0.2,1,matching bench: implied_persistence",coef
+fb.w4.r02.bench,results/summary.csv,"B,l,4,30000,0.2,1: bench_implied_persistence",coef
+fb.w4.r02.bench2,results/summary.csv,"B,l,4,30000,0.2,1: bench_implied_persistence",coef
+fb.w4.r04.model,results/summary.csv,"B,l,4,30000,0.4,1,matching bench: implied_persistence",coef
+fb.w4.r04.bench,results/summary.csv,"B,l,4,30000,0.4,1: bench_implied_persistence",coef
+fb.w4.r04.bench2,results/summary.csv,"B,l,4,30000,0.4,1: bench_implied_persistence",coef
+fb.w4.r06.model,results/summary.csv,"B,l,4,30000,0.6,1,matching bench: implied_persistence",coef
+fb.w4.r06.bench,results/summary.csv,"B,l,4,30000,0.6,1: bench_implied_persistence",coef
+fb.w4.r06.bench2,results/summary.csv,"B,l,4,30000,0.6,1: bench_implied_persistence",coef
+fb.w4.r08.model,results/summary.csv,"B,l,4,30000,0.8,1,matching bench: implied_persistence",coef
+fb.w4.r08.bench,results/summary.csv,"B,l,4,30000,0.8,1: bench_implied_persistence",coef
+fb.w4.r08.bench2,results/summary.csv,"B,l,4,30000,0.8,1: bench_implied_persistence",coef
+fb.w4.r10.model,results/summary.csv,"B,l,4,30000,1.0,1,matching bench: implied_persistence",coef
+fb.w4.r10.bench,results/summary.csv,"B,l,4,30000,1.0,1: bench_implied_persistence",coef
+fb.w4.r10.bench2,results/summary.csv,"B,l,4,30000,1.0,1: bench_implied_persistence",coef
+fb.w4.prior.model,results/summary.csv,"B,l,4,30000,prior,1,matching bench: implied_persistence",coef
+fb.w4.prior.bench,results/summary.csv,"B,l,4,30000,prior,1: bench_implied_persistence",coef
+fb.w4.prior.bench2,results/summary.csv,"B,l,4,30000,prior,1: bench_implied_persistence",coef
+fb.n_verdicts,results/summary.csv,"B,l,{full,4},30000,h=1,matching bench: rows",int
+fb.n_equivalent,results/summary.csv,same: verdict == equivalent,int
+fb.max_abs_gap,results/summary.csv,same: max |mean gap|,coef
+fb.exception.window,results/summary.csv,the non-equivalent Family B row: window,text
+fb.exception.rho,results/summary.csv,the non-equivalent Family B row: rho,text
+fb.exception.mean,results/summary.csv,the non-equivalent Family B row: mean,coef
+fb.exception.verdict,results/summary.csv,the non-equivalent Family B row: verdict,text
+fb.exception.measure,results/summary.csv,the non-equivalent Family B row: column,text
+overlay.n_human_ci_incl_w4,results/hypotheses.json; results/summary.csv,grid rho whose human 95% interval includes the W = 4 window-Bayes curve,int
+overlay.first_rho_incl_w4,results/hypotheses.json; results/summary.csv,smallest such rho,text
+overlay.rhos_human_above_w4,results/hypotheses.json; results/summary.csv,grid rho where the human point estimate is above the W = 4 window-Bayes curve,text
+aklmt.innov_sd_min,results/hypotheses.json,min design_check.innov_sd,coef
+aklmt.innov_sd_max,results/hypotheses.json,max design_check.innov_sd,coef
+spf.ngdp.full.model,results/hypotheses.json,"spf.rows[NGDP,full].b_model_mean",coef
+spf.ngdp.full.survey,results/hypotheses.json,"spf.rows[NGDP,full].b_survey",coef
+spf.ngdp.full.quarters,results/hypotheses.json,"spf.rows[NGDP,full].T",int
+spf.tn10y.w4.model,results/hypotheses.json,"spf.rows[TN10Y,4].b_model_mean",coef
+spf.tn10y.w4.survey,results/hypotheses.json,"spf.rows[TN10Y,4].b_survey",coef
+spf.tn10y.w4.quarters,results/hypotheses.json,"spf.rows[TN10Y,4].T",int
+spf.tb3m.w4.model,results/hypotheses.json,"spf.rows[TB3M,4].b_model_mean",coef
+spf.tb3m.w4.survey,results/hypotheses.json,"spf.rows[TB3M,4].b_survey",coef
+spf.tb3m.w4.quarters,results/hypotheses.json,"spf.rows[TB3M,4].T",int
+spf.unemp.w4.model,results/hypotheses.json,"spf.rows[UNEMP,4].b_model_mean",coef
+spf.unemp.w4.survey,results/hypotheses.json,"spf.rows[UNEMP,4].b_survey",coef
+spf.unemp.w4.quarters,results/hypotheses.json,"spf.rows[UNEMP,4].T",int
+spf.cpi.w4.model,results/hypotheses.json,"spf.rows[CPI,4].b_model_mean",coef
+spf.cpi.w4.survey,results/hypotheses.json,"spf.rows[CPI,4].b_survey",coef
+spf.cpi.w4.quarters,results/hypotheses.json,"spf.rows[CPI,4].T",int
+spf.pgdp.w4.model,results/hypotheses.json,"spf.rows[PGDP,4].b_model_mean",coef
+spf.pgdp.w4.survey,results/hypotheses.json,"spf.rows[PGDP,4].b_survey",coef
+spf.pgdp.w4.quarters,results/hypotheses.json,"spf.rows[PGDP,4].T",int
+spf.ngdp.w4.model,results/hypotheses.json,"spf.rows[NGDP,4].b_model_mean",coef
+spf.ngdp.w4.survey,results/hypotheses.json,"spf.rows[NGDP,4].b_survey",coef
+spf.ngdp.w4.quarters,results/hypotheses.json,"spf.rows[NGDP,4].T",int
+spf.rgdp.w4.model,results/hypotheses.json,"spf.rows[RGDP,4].b_model_mean",coef
+spf.rgdp.w4.survey,results/hypotheses.json,"spf.rows[RGDP,4].b_survey",coef
+spf.rgdp.w4.quarters,results/hypotheses.json,"spf.rows[RGDP,4].T",int
+spf.pgdp.full.model,results/hypotheses.json,"spf.rows[PGDP,full].b_model_mean",coef
+spf.pgdp.full.survey,results/hypotheses.json,"spf.rows[PGDP,full].b_survey",coef
+spf.pgdp.full.quarters,results/hypotheses.json,"spf.rows[PGDP,full].T",int
+spf.rgdp.full.model,results/hypotheses.json,"spf.rows[RGDP,full].b_model_mean",coef
+spf.rgdp.full.survey,results/hypotheses.json,"spf.rows[RGDP,full].b_survey",coef
+spf.rgdp.full.quarters,results/hypotheses.json,"spf.rows[RGDP,full].T",int
+spf.cpi.full.model,results/hypotheses.json,"spf.rows[CPI,full].b_model_mean",coef
+spf.cpi.full.survey,results/hypotheses.json,"spf.rows[CPI,full].b_survey",coef
+spf.cpi.full.quarters,results/hypotheses.json,"spf.rows[CPI,full].T",int
+spf.unemp.full.model,results/hypotheses.json,"spf.rows[UNEMP,full].b_model_mean",coef
+spf.unemp.full.survey,results/hypotheses.json,"spf.rows[UNEMP,full].b_survey",coef
+spf.unemp.full.quarters,results/hypotheses.json,"spf.rows[UNEMP,full].T",int
+spf.tn10y.full.model,results/hypotheses.json,"spf.rows[TN10Y,full].b_model_mean",coef
+spf.tn10y.full.survey,results/hypotheses.json,"spf.rows[TN10Y,full].b_survey",coef
+spf.tn10y.full.quarters,results/hypotheses.json,"spf.rows[TN10Y,full].T",int
+spf.n_cells,results/hypotheses.json,len(spf.rows),int
+spf.n_model_negative,results/hypotheses.json,spf.rows with b_model_mean < 0,int
+spf.n_variables,results/hypotheses.json,distinct spf.rows.variable,int
+spf.n_survey_positive,results/hypotheses.json,variables with b_survey > 0,int
+spf.n_same_sign,results/hypotheses.json,cells where model and survey b share a sign,int
+spf.omitted.cell,results/hypotheses.json,spf.omitted (per-cell rule),text
+spf.omitted.pct,results/hypotheses.json,spf.omitted reason,text
+spf.cell_limit_pct,results/hypotheses.json,spf.omitted reason,text
+spf.seeds,results/hypotheses.json,spf.rows[0].n_seeds,int
+design.level_pct,docs/PREREG.md,section 6: 95% Student-t interval,int
+design.h3.rho_lo,analysis/hypotheses.py,H3_RHOS[0],text
+design.h3.rho_hi,analysis/hypotheses.py,H3_RHOS[1],text
+design.head_outputs,rt/model.py,2 x HORIZONS,int
+runs.a,results/hypotheses.json,runs with family A,int
+runs.b,results/hypotheses.json,runs with family B,int
+prereg.h1.rule,docs/PREREG.md,"section 7, H1 decision",verbatim
+prereg.h2.rule,docs/PREREG.md,"section 7, H2 decision",verbatim
+prereg.h3.rule,docs/PREREG.md,"section 7, H3 rule",verbatim
+prereg.h3.positive,docs/PREREG.md,"section 7, H3 rows",verbatim
+prereg.h3.report,docs/PREREG.md,"section 7, H3 rule",verbatim
+prereg.bias_rule,docs/PREREG.md,section 1,verbatim
+prereg.not_robust,docs/PREREG.md,section 6,verbatim
+prereg.not_tested,docs/PREREG.md,section 6,verbatim
+spf.sample,docs/DECISIONS.md,entry: Survey comparison conventions,text
+novelty.date,docs/novelty_check.md,Date,date
+eor.h1.max_w,results/metrics,window of the largest |difference| at h=1,text
+eor.h1.max_rho,results/metrics,rho of the largest |difference| at h=1,text
+eor.h1.max_abs_diff_ex1,results/metrics,"h=1, rho < 1: max |mean difference|",coef
+eor.all.max_w,results/metrics,"window of the largest |difference|, h=1..5",text
+eor.all.max_h,results/metrics,horizon of the largest |difference|,int
+eor.all.max_rho,results/metrics,rho of the largest |difference|,text
+eor.all.max_lo,results/metrics,"its interval, lower end",coef
+eor.all.max_hi,results/metrics,"its interval, upper end",coef
+eor.all.n_excl_zero,results/metrics,h=1..5: rows whose 95% interval excludes zero,int
+h2.rho04plus.gap.widest_end,results/summary.csv,"size l, W in 2..16, rho >= 0.4, gap: widest interval end",coef
+h3.max_sd,results/hypotheses.json,max over h3.combos of sd,coef
+timing.minutes_tag_to_first_run,git; results/ledger.csv,"first start_iso minus tagger date of prereg-v1.1, minutes",text
+signature.statement,docs/paper/signature.json,statement,verbatim
+signature.date,docs/paper/signature.json,date,date
+gappos.n_other,results/summary.csv,"size l, 30000, h=1, matching bench, gap, rho > 0: intervals with lo > 0",int
+gappos.other_cells,results/summary.csv,those cells,text
+gappos.other_max_mean,results/summary.csv,largest mean among them,coef
+env.torch,uv.lock,package torch,text
+env.numpy,uv.lock,package numpy,text
+env.scipy,uv.lock,package scipy,text
+env.pandas,uv.lock,package pandas,text
+env.matplotlib,uv.lock,package matplotlib,text
+env.pyarrow,uv.lock,package pyarrow,text
+env.pytest,uv.lock,package pytest,text
+env.python,pyproject.toml,requires-python,text

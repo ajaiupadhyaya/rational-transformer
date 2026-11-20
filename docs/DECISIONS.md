@@ -392,3 +392,14 @@ Cloud evaluation used TF32: re-evaluating two cloud cells in fp32 moves excess e
 Owner approved. Created https://github.com/ajaiupadhyaya/rational-transformer (public) at 04:54 UTC and pushed `main` (8c30667) and tags
 `prereg-v1` to `prereg-v1.4` unchanged. The tags existed only locally until then, so they are the
 author's record, not an independent timestamp; the paper says so.
+
+## 2026-11-20: cost accounting corrected (pilot), at the paper's fact-check
+
+The 2026-11-20 spend entry above says "about $14.35 … pilot included". That is not
+established. The four sweep instances sum to about $14.35 (~41 instance-hours at $0.35/h); the
+first figure (~$2.11) was read from the Thunder console and it is not recorded whether it
+included the separate pilot instance 3lnydbl8 (~99 min, "~$0.71" in the pilot entry). If the
+pilot was billed separately, total cloud spend is about $15.06. So spend is $14.35 to about
+$15.06, at or just over the $15 pre-registered cloud cap (not "within" it), and within the
+owner's $20 hard limit either way. The figures are estimates from instance time, not yet
+reconciled against the provider's bill. The paper and the report edition state the range.

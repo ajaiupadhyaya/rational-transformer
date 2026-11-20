@@ -1,0 +1,55 @@
+# Supplementary tables and figures {#sec-app-supplementary}
+
+This appendix prints the generated tables and figures that the body cites but does not set in the text. They are grouped by the section that discusses them and, within each group, follow the order in which that section cites them. Each is printed unedited from its generated file, under the label the body cites; the figures follow the tables.
+
+```{=latex}
+\begingroup\scriptsize\raggedright\setstretch{1}
+```
+
+## Networks, training and evaluation
+
+{{< include _generated/tables/not-run.md >}}
+
+{{< include _generated/tables/gate.md >}}
+
+## Pre-registration and decision rules
+
+{{< include _generated/tables/convergence-cells.md >}}
+
+{{< include _generated/tables/convergence-runs.md >}}
+
+## H2 and H3 at the other sizes
+
+{{< include _generated/tables/h2-other-sizes.md >}}
+
+{{< include _generated/tables/h3-other-sizes.md >}}
+
+## Exploratory results
+
+{{< include _generated/tables/xs-departures.md >}}
+
+{{< include _generated/tables/eor-horizons.md >}}
+
+{{< include _generated/tables/kappa.md >}}
+
+## The human overlay
+
+{{< include _generated/tables/overlay-verdicts.md >}}
+
+{{< include _generated/tables/aklmt-design.md >}}
+
+```{=latex}
+\endgroup
+```
+
+## Supplementary figures
+
+{{< include _generated/figures/h2-excess.md >}}
+
+{{< include _generated/figures/traces-excess.md >}}
+
+{{< include _generated/figures/rho0.md >}}
+
+{{< include _generated/figures/horizons.md >}}
+
+{{< include _generated/figures/eor.md >}}

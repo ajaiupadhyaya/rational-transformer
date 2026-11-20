@@ -1,0 +1,31 @@
+# H1: the largest model with the full window against Bayes {#sec-h1}
+
+This section and the two that follow report the confirmatory hypotheses in the order the pre-registration fixes. Every number is read from the registered rows: Family A, size l, horizon 1, step {{< var design.steps >}}, {{< var design.n_seeds >}} seeds. Excess error is in percentage points of the benchmark's squared error (margin ±{{< var design.margin.mse >}}); the gap is the model's implied persistence minus the benchmark's (margin ±{{< var design.margin.gap >}}). Each hypothesis is reported with its decision first, in the registered wording, then its estimates, intervals and how tight they are, whatever the decision. All {{< var runs.complete >}} planned runs finished, no scheduled seed is missing, and every verdict with its seed values is in [Appendix @sec-app-verdicts].
+
+**H1 is {{< var h1.decision >}}.** The registered rule reads: "{{< var prereg.h1.rule >}}" All {{< var h1.n_equivalent >}} of the {{< var h1.n_total >}} verdicts are "equivalent" (@tbl-h1-confirmatory, @fig-h1).
+
+```{=latex}
+\begingroup\scriptsize\raggedright\setstretch{1}
+```
+
+{{< include _generated/tables/h1-confirmatory.md >}}
+
+```{=latex}
+\endgroup
+```
+
+{{< include _generated/figures/h1.md >}}
+
+## Estimates
+
+Every estimate and interval is in @tbl-h1-confirmatory; the two ends of the grid show the range. At ρ = 0 the mean excess error over Bayes is {{< var h1.r00.mse.mean >}} points ({{< var design.level_pct >}}% interval {{< var h1.r00.mse.lo >}} to {{< var h1.r00.mse.hi >}}) and the mean gap is {{< var h1.r00.gap.mean >}} ({{< var h1.r00.gap.lo >}} to {{< var h1.r00.gap.hi >}}). At ρ = 1 they are {{< var h1.r10.mse.mean >}} points ({{< var h1.r10.mse.lo >}} to {{< var h1.r10.mse.hi >}}) and {{< var h1.r10.gap.mean >}} ({{< var h1.r10.gap.lo >}} to {{< var h1.r10.gap.hi >}}). A printed −0.0000 is a negative value smaller than 0.00005 in size. On the prior set, which is printed beside the grid rows and is not part of the decision, the excess error is {{< var h1.prior.mse.mean >}} points ({{< var h1.prior.mse.lo >}} to {{< var h1.prior.mse.hi >}}) and the gap {{< var h1.prior.gap.mean >}} ({{< var h1.prior.gap.lo >}} to {{< var h1.prior.gap.hi >}}).
+
+## How tight the equivalence is
+
+Equivalence in this design is a statement about intervals, so its strength is how far inside the margins they lie. Every interval of excess error lies within [{{< var h1.mse.min_lo >}}, {{< var h1.mse.max_hi >}}] points; the end furthest from zero, {{< var h1.mse.max_abs_end >}} at ρ = 1, is about one {{< var h1.mse.margin_ratio >}}th of the ±{{< var design.margin.mse >}} margin. Every interval of the gap lies within ±{{< var h1.gap.max_abs_end >}}, about one {{< var h1.gap.margin_ratio >}}th of the ±{{< var design.margin.gap >}} margin. The decision would be the same under margins an order of magnitude tighter than those registered; that is a description after the fact, not a registered test.
+
+Equivalent does not mean identical. Several intervals exclude zero. At ρ = 0 the model's squared error exceeds Bayes's by a small amount whose interval lies wholly above zero, and its implied persistence is above Bayes's by {{< var h1.r00.gap.mean >}}, also with an interval above zero; at ρ = 0.8 the excess error is negative with an interval wholly below zero, which by the first remark after @prp-optimal means the model leans very slightly towards that ρ at a cost elsewhere. These departures are two orders of magnitude smaller than the effects in the human data, and the residual at ρ = 0 is taken up as an exploratory matter in @sec-exploratory.
+
+## Reading
+
+H1 was registered as a near-replication. That a transformer trained across many linear systems matches the optimal filter in squared error is the headline of @balim2023can and @akram2024transformers, and with ρ drawn afresh for every training sequence the result of @raventos2023pretraining leads one to expect the Bayes estimator for the continuous prior. The confirmation here is for a scalar AR(1) with an unknown coefficient, in the slope metric as well as in squared error, and its role in this paper is to establish that the full-window network is a sound base against which to read the window-limited ones. No "different" verdict arose, so nothing in H1 was subject to the training-length rule. The statement holds at the last checkpoint: at the two earlier checkpoints the full-window model is equivalent on {{< var trace.s3000.full.equivalent >}} and {{< var trace.s10000.full.equivalent >}} of {{< var h1.n_total >}} verdicts (exploratory; @sec-exploratory).

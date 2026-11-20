@@ -1,0 +1,61 @@
+# Networks, training and evaluation {#sec-networks}
+
+Everything in this section is fixed by the grid configuration and the model and training code of the repository (`configs/grid.json`, `rt/model.py`, `rt/train.py`, `rt/evaluate.py`) at the tagged commits, whose hash every confirmatory run carries ([Appendix @sec-app-prereg]). The grid as run differs from the grid as first frozen in the ways set out at the end of the section.
+
+## Architecture
+
+The forecaster is a causal transformer with layer normalisation before each sub-layer, operating on real-valued inputs. Each position embeds its value from the two features $[x_s, \operatorname{asinh}(x_s)]$ by one linear layer and adds a learned embedding of its true time index s (indices 1 to {{< var design.t_sim >}}; index 0 marks padding and is never attended to). Each block applies multi-head self-attention and a feed-forward layer of four times the model width with a GELU non-linearity, each preceded by a layer normalisation and wrapped in a residual connection; a final layer normalisation follows the last block. There is no normalisation of the inputs.
+
+The output head is affine in the current value. A linear layer maps the final state at each position to {{< var design.head_outputs >}} numbers, a slope $a_h$ and an intercept $b_h$ for each horizon h = 1, …, {{< var design.horizons >}}, and the forecast is
+
+$$
+F_{t,h} = a_h\, x_t + b_h ,
+$$ {#eq-head}
+
+with $x_t$ the raw value at that position; the slope rows of the head start at zero. The head was chosen before the freeze on a probe at one seed of a small model, which showed that a linear head reading a layer-normalised state cannot scale its forecast with $x_t$ and fails at ρ = 1; the probe and everything seen in it are disclosed in [Appendix @sec-app-disclosures] and discussed in @sec-limitations. The slope $a_h$ depends on the whole window through the network, so @eq-head does not restrict the forecast to be linear in the history; window-Bayes itself has this form, with $a_h = E[\rho^{h} \mid \mathcal{I}^{W}_{t}]$ and $b_h = 0$ in Family A.
+
+The four sizes are given in @tbl-sizes. Only size l, the largest, enters a decision.
+
+```{=latex}
+\begingroup\footnotesize\raggedright\setstretch{1}
+```
+
+{{< include _generated/tables/sizes.md >}}
+
+```{=latex}
+\endgroup
+```
+
+## Memory length as a hard information limit
+
+A memory length W, of {{< var design.windows_finite >}} observations or the full sequence, limits the input, not the attention pattern. With window W, the forecast at origin t is computed from the inputs $x_{\max(1,\,t-W+1)}, \dots, x_t$ and their true time indices only, left-padded with (value 0, time index 0) to length W; padding is masked from attention, so the forecast equals that of the unpadded window. Because the limit is imposed by truncating the input and not by masking attention within a longer sequence, a deep network cannot see further back than W through intermediate positions. With the full window the network sees $x_1, \dots, x_t$ in one causal pass over the {{< var design.t_max >}} positions. The benchmark is given exactly the same observations and time indices (@eq-info).
+
+## Training
+
+Every training step draws a fresh batch of {{< var design.batch >}} sequences from the family's prior, so no sequence is seen twice and there is no training set to overfit. For the full window the loss is the squared error summed over the {{< var design.horizons >}} horizons and averaged over all {{< var design.t_max >}} positions and the batch. For a finite window each sequence is given one origin t drawn uniformly from 1 to {{< var design.t_max >}}, and the loss is taken at that origin only. By @prp-optimal the minimiser of either loss over all functions of the inputs is the window-Bayes forecast.
+
+The optimiser is AdamW with learning rate {{< var design.lr >}}, betas ({{< var design.beta1 >}}, {{< var design.beta2 >}}) and weight decay {{< var design.weight_decay >}} applied to all parameters. The learning rate warms up linearly over {{< var design.warmup >}} steps and then follows a cosine to zero at step {{< var design.steps >}}, the last step (@tbl-training). The schedule matters for reading the results: the last checkpoint is the only one at which the learning rate has reached zero.
+
+```{=latex}
+\begingroup\footnotesize\raggedright\setstretch{1}
+```
+
+{{< include _generated/tables/training.md >}}
+
+```{=latex}
+\endgroup
+```
+
+## Seeds
+
+The batch at step k of a run with seed s is drawn from a generator seeded by the triple (s, a fixed tag, k), and the parameters are initialised from seed s (@tbl-seeds, [Appendix @sec-app-replication]). Two consequences follow. A run interrupted and resumed from a checkpoint follows the same data stream as an uninterrupted run. And all cells of a family (a cell is one size at one window) at a given seed see the same training paths, and for windowed cells the same origins: cells are not independent of one another, only seeds are. No statement in this paper treats two cells as independent replications. The seeds are {{< var design.seeds >}}.
+
+## Evaluation sets
+
+Every run is scored on the same fixed sets, drawn from generators separate from every training stream: for each family, {{< var design.eval_n_rho >}} sequences at each of the grid values ρ ∈ {0, 0.2, 0.4, 0.6, 0.8, 1}, and one *prior set* of {{< var design.eval_n_prior >}} sequences with ρ drawn from U[0, 1]. With {{< var design.eval_n_origins >}} scored origins per sequence, a diagnostic at a grid ρ pools {{< var design.eval_pairs_rho >}} pairs and one on the prior set {{< var design.eval_pairs_prior >}}. The benchmarks are computed on the same sequences, so the gap and the excess error compare model and benchmark pair by pair. The grid rows carry the hypotheses; the prior row is printed beside them and enters no decision.
+
+## Compute, and the grid as run
+
+The grid as configured at the freeze was {{< var design.runs.configured >}} runs: {{< var design.runs.configured_a >}} in Family A ({{< var design.n_sizes >}} sizes, {{< var design.n_windows >}} windows, {{< var design.n_seeds >}} seeds) and {{< var design.runs.configured_b >}} in Family B (size l, {{< var design.n_windows >}} windows, {{< var design.n_seeds >}} seeds), with {{< var design.n_checkpoints_planned >}} checkpoints per run. A timing pilot on the rented GPU, in which no diagnostic was looked at, projected that grid at about {{< var cost.projected_hours >}} GPU-hours, against the roughly {{< var cost.sweep_hours >}} that the \${{< var cost.sweep_cap_usd >}} set aside for the sweep would buy at the listed price. The pre-registration provided for this case: sizes xs and s move to a laptop, then size m drops to {{< var runs.m_seeds >}} seeds, size l is never cut, and beyond that the owner of the study, who is the author, decides. Deviation {{< var prereg.tag.v11.name >}}, decided before any confirmatory run existed, applied those two steps and three further cuts that the pre-registration had not foreseen: checkpoints at {{< var design.checkpoints >}} steps only; Family B at the full window and W = 4 with {{< var runs.b_seeds >}} seeds; and, on the rented GPU, TF32 matrix multiplication with one CPU thread per process. All were decided from timing alone.
+
+The grid as run is therefore {{< var runs.planned >}} runs, {{< var runs.a >}} in Family A and {{< var runs.b >}} in Family B; the other {{< var runs.not_run_by_design >}} cells of the configured grid were not run by design (@tbl-not-run, [Appendix @sec-app-supplementary]). All {{< var runs.complete >}} finished their {{< var design.steps >}} steps. Sizes xs and s were trained on an Apple-silicon laptop and sizes m and l and Family B on a rented NVIDIA RTX A6000. The {{< var runs.primary >}} runs of Family A at size l, on which every hypothesis rests, were not cut. The cloud work cost about \${{< var cost.total_usd >}} for the four sweep instances, about {{< var cost.hours >}} rented GPU-hours, plus the pilot instance (about \${{< var cost.pilot_usd >}}) if that was billed separately: \${{< var cost.total_usd >}} to about \${{< var cost.total_with_pilot_usd >}} in total, against the \${{< var cost.sweep_cap_usd >}} planned for the sweep. That is at or just over the pre-registered cloud cap of \${{< var cost.cloud_cap_usd >}}, depending on the pilot. The figure is computed from instance time at the listed price and has not yet been reconciled against the provider's bill; a stalled file copy wasted about {{< var cost.lost_hours >}} GPU-hours that had to be repeated, and no grid cell was added, dropped or re-run selectively because of the overrun. The ledgers, the cost record and the software environment are in [Appendix @sec-app-replication].

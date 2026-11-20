@@ -1,0 +1,43 @@
+# H2: window-limited models against window-Bayes {#sec-h2}
+
+**At each of W = {{< var design.windows_finite >}}, the decision is "{{< var h2.w2.decision >}}".** The registered rule reads, for each window separately: "{{< var prereg.h2.rule >}}" The verdicts equivalent to window-Bayes number {{< var h2.w2.n_equivalent >}}, {{< var h2.w4.n_equivalent >}}, {{< var h2.w8.n_equivalent >}} and {{< var h2.w16.n_equivalent >}} of {{< var h2.n_total >}} at W = {{< var design.windows_finite >}}. The four windows are separate tests, as registered, and no pooled statement is made across them. @tbl-h2-summary gives the decisions with the widest interval ends, @tbl-h2-confirmatory every row, and @fig-h2-gap the gaps.
+
+```{=latex}
+\begingroup\footnotesize\raggedright\setstretch{1}
+```
+
+{{< include _generated/tables/h2-summary.md >}}
+
+```{=latex}
+\endgroup
+```
+
+{{< include _generated/figures/h2-gap.md >}}
+
+```{=latex}
+\begingroup\scriptsize\raggedright\setstretch{1}
+```
+
+{{< include _generated/tables/h2-confirmatory.md >}}
+
+```{=latex}
+\endgroup
+```
+
+## What the decision means
+
+A network with window W departs from full Bayes by construction: it cannot use observations it does not have. Measured against full Bayes the windowed networks are outside the margins at most values of ρ ([Appendix @sec-app-verdicts]), as they must be; window-Bayes itself differs from Bayes by up to {{< var bench.max_wb_minus_bayes >}} in implied persistence (@tbl-benchmarks). H2 asks whether anything is left once the benchmark is given the same window. With all {{< var h2.n_total >}} verdicts equivalent at each window, the part of the forecast that departs from full Bayes is accounted for, within the margins, by the information limit. The network with four observations overreacts strongly against the truth at low persistence and underreacts at high persistence; so does a Bayesian with four observations, by the same amount within ±{{< var design.margin.gap >}}.
+
+## Estimates and how tight they are
+
+For excess error, the interval end furthest from zero at each window is {{< var h2.w2.mse.widest_end >}} points at W = 2 (at ρ = {{< var h2.w2.mse.widest_end_rho >}}), {{< var h2.w4.mse.widest_end >}} at W = 4, {{< var h2.w8.mse.widest_end >}} at W = 8 and {{< var h2.w16.mse.widest_end >}} at W = 16 (the last three at ρ = {{< var h2.w16.mse.widest_end_rho >}}). For the gap it is {{< var h2.w2.gap.widest_end >}}, {{< var h2.w4.gap.widest_end >}}, {{< var h2.w8.gap.widest_end >}} and {{< var h2.w16.gap.widest_end >}}, each at ρ = {{< var h2.w16.gap.widest_end_rho >}}. Over the four windows the widest end is {{< var h2.all.mse.widest_end >}} points of excess error, {{< var h2.all.mse.margin_share_pct >}}% of the margin, and {{< var h2.all.gap.widest_end >}} of gap, {{< var h2.all.gap.margin_share_pct >}}% of the margin, both at W = {{< var h2.all.gap.widest_end_w >}} and ρ = 0.
+
+The equivalence is thus less tight than in H1, and the slack sits in one place. At ρ = 0 the windowed network's implied persistence is above window-Bayes by {{< var rho0.windowed.min_mean >}} to {{< var rho0.windowed.max_mean >}}, more for longer windows: the mean gap is {{< var h2.w2.r00.gap.mean >}} at W = 2 ({{< var h2.w2.r00.gap.lo >}} to {{< var h2.w2.r00.gap.hi >}}), {{< var h2.w4.r00.gap.mean >}} at W = 4 ({{< var h2.w4.r00.gap.lo >}} to {{< var h2.w4.r00.gap.hi >}}), {{< var h2.w8.r00.gap.mean >}} at W = 8 ({{< var h2.w8.r00.gap.lo >}} to {{< var h2.w8.r00.gap.hi >}}) and {{< var h2.w16.r00.gap.mean >}} at W = 16 ({{< var h2.w16.r00.gap.lo >}} to {{< var h2.w16.r00.gap.hi >}}), with excess errors of {{< var h2.w2.r00.mse.mean >}}, {{< var h2.w4.r00.mse.mean >}}, {{< var h2.w8.r00.mse.mean >}} and {{< var h2.w16.r00.mse.mean >}} points. Each of these gap intervals excludes zero. The network overstates persistence at ρ = 0 by a small amount that has the same sign at every window; it is inside the margin, so the verdict is "equivalent", and the verdict should be read as that and not as "identical". From ρ = 0.4 upward every gap interval lies within ±{{< var h2.rho04plus.gap.widest_end >}}: at ρ = 0.8, for instance, the mean gaps are {{< var h2.w2.r08.gap.mean >}}, {{< var h2.w4.r08.gap.mean >}}, {{< var h2.w8.r08.gap.mean >}} and {{< var h2.w16.r08.gap.mean >}}.
+
+On the prior set, printed beside the grid rows and not part of any decision, the excess error over window-Bayes is {{< var h2.w2.prior.mse.mean >}}, {{< var h2.w4.prior.mse.mean >}}, {{< var h2.w8.prior.mse.mean >}} and {{< var h2.w16.prior.mse.mean >}} points for the four windows. Averaged over the prior the windowed networks are within a twentieth of a point of the best forecast available from their inputs.
+
+## Other sizes and the training-length rule
+
+The same rows at sizes xs, s and m were registered to be reported in the same tables and never to enter a decision; they are in @tbl-h2-other-sizes ([Appendix @sec-app-supplementary]) and discussed in @sec-exploratory. Sizes s and m are equivalent to window-Bayes on every verdict at every window; the smallest model is not.
+
+No size-l verdict is "different", so no cell of H2 was flagged and the training-length rule was not invoked. The decision holds at the registered checkpoint only. At {{< var design.step_mid >}} steps the same networks are equivalent to window-Bayes on {{< var trace.s10000.w2.equivalent >}}, {{< var trace.s10000.w4.equivalent >}}, {{< var trace.s10000.w8.equivalent >}} and {{< var trace.s10000.w16.equivalent >}} of {{< var h2.n_total >}} verdicts at the four windows (exploratory; @tbl-traces): the equivalence of H2 is something the last third of the learning-rate schedule delivers.

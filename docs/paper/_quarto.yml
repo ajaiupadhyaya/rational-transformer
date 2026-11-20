@@ -1,0 +1,85 @@
+project:
+  type: default
+  output-dir: _output
+  render:
+    - paper.qmd
+
+bibliography: references.bib
+
+execute:
+  enabled: false
+
+format:
+  pdf:
+    pdf-engine: xelatex
+    documentclass: article
+    fontsize: 11pt
+    geometry: margin=1in
+    linestretch: 1.15
+    # figures sit where they are first cited
+    fig-pos: 'H'
+    # TeX Gyre Pagella, loaded by file name: it sits in the TeX Live tree but is
+    # not registered with fontconfig, so the family name does not resolve.
+    mainfont: texgyrepagella-regular.otf
+    mainfontoptions:
+      - BoldFont=texgyrepagella-bold.otf
+      - ItalicFont=texgyrepagella-italic.otf
+      - BoldItalicFont=texgyrepagella-bolditalic.otf
+    mathfont: texgyrepagella-math.otf
+    number-sections: true
+    toc: false
+    # the appendices quote the pre-registration and the decisions log verbatim, one
+    # lower-level heading per entry: keep them out of the TOC
+    toc-depth: 2
+    colorlinks: true
+    linkcolor: muted
+    citecolor: muted
+    urlcolor: muted
+    toccolor: black
+    # working-paper layout: a title page set in the body (so \maketitle is emptied), running
+    # headers, microtype, muted link colour;
+    # wide appendix tables are set landscape; figures are scaled to the text width and at most
+    # 0.42 of the text height; long identifiers may break after an underscore; subscript digits
+    # missing from Pagella are typeset
+    include-in-header:
+      text: |
+        \usepackage{pdflscape}
+        \usepackage{microtype}
+        \usepackage{xcolor}
+        \definecolor{muted}{HTML}{1F3A5F}
+        \renewcommand{\maketitle}{}
+        \usepackage{fancyhdr}
+        \pagestyle{fancy}
+        \fancyhf{}
+        \fancyhead[L]{\small\itshape The Rational Transformer}
+        \fancyhead[R]{\small\thepage}
+        \renewcommand{\headrulewidth}{0.3pt}
+        \setlength{\headheight}{14pt}
+        \fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{0pt}}
+        \usepackage{caption}
+        \captionsetup{font=small,labelfont=bf,labelsep=period,justification=justified,singlelinecheck=false}
+        \setlength{\aboverulesep}{0.4ex}
+        \setlength{\belowrulesep}{0.6ex}
+        \setlength{\LTpost}{2pt}
+        \usepackage{needspace}
+        \widowpenalty=10000
+        \clubpenalty=10000
+        \makeatletter
+        \renewcommand*\pandocbounded[1]{\sbox\pandoc@box{#1}%
+          \Gscale@div\@tempa{0.42\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+          \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+          \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi
+          \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}\else\usebox{\pandoc@box}\fi}
+        \makeatother
+        \renewcommand{\_}{\textunderscore\allowbreak}
+        \usepackage{newunicodechar}
+        \newunicodechar{₀}{\textsubscript{0}}
+        \newunicodechar{₁}{\textsubscript{1}}
+        \newunicodechar{₂}{\textsubscript{2}}
+        \newunicodechar{₃}{\textsubscript{3}}
+        \newunicodechar{₄}{\textsubscript{4}}
+        \newunicodechar{₉}{\textsubscript{9}}
+        \newunicodechar{⁴}{\textsuperscript{4}}
+        \newunicodechar{⁻}{\textsuperscript{\textendash}}
+        \newunicodechar{∈}{\ensuremath{\in}}
+    keep-tex: true

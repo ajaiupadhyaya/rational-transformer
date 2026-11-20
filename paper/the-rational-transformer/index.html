@@ -32,7 +32,7 @@
     <div class="stat"><div class="stat__value">12 / 12</div><div class="stat__label">H1: verdicts equivalent to Bayes, largest model, full memory</div></div>
     <div class="stat"><div class="stat__value">4 / 4</div><div class="stat__label">H2: windows, each tested separately, equivalent to window-Bayes</div></div>
     <div class="stat"><div class="stat__value">0 / 8</div><div class="stat__label">H3: overreaction where window-Bayes underreacts</div></div>
-    <div class="stat"><div class="stat__value">≈ 41</div><div class="stat__label">Rented RTX A6000 hours (≈ $14.35); sizes xs and s on a laptop</div></div>
+    <div class="stat"><div class="stat__value">≈ 41</div><div class="stat__label">Rented RTX A6000 hours (≈ $14.35–15.06); sizes xs and s on a laptop</div></div>
   </div>
 
   <div class="findings">
@@ -83,7 +83,7 @@
 
 <section>
   <h2><span class="n">05</span>Pre-registered decision rules</h2>
-  <p>The pre-registration is a document in the project repository (<span class="mono">docs/PREREG.md</span>), frozen by git tag <span class="mono">prereg-v1</span> on 17 November 2026. It was not lodged with an independent registry. The repository holds the tags, the deviation log, the code and every verdict with its seed values (<span class="mono">RESULTS.md</span>): <span class="mono">github.com/ajaiupadhyaya/rational-transformer</span>. The repository and its tags were made public on 20 November 2026, after every run had finished, so the tag dates are the author's record, not an independent timestamp. This report is archived at Zenodo, doi:<span class="mono">10.5281/zenodo.24387529</span>.</p>
+  <p>The pre-registration is a document in the project repository (<span class="mono">docs/PREREG.md</span>), frozen by git tag <span class="mono">prereg-v1</span> on 17 November 2026. It was not lodged with an independent registry. The repository holds the tags, the deviation log, the code and every verdict with its seed values (<span class="mono">RESULTS.md</span>): <span class="mono">github.com/ajaiupadhyaya/rational-transformer</span>. The repository and its tags were made public on 20 November 2026, after every run had finished, so the tag dates are the author's record, not an independent timestamp. This is the report-series edition; the full academic paper is archived at Zenodo, doi:<span class="mono">10.5281/zenodo.24387529</span>.</p>
   <p>Seeds are the unit. For each cell the seed mean gets a 95% Student-t interval. All seeds are scored on the same evaluation sets, so the interval measures variation across training runs only; sampling error in the evaluation sets is common to every seed and is not in it. Model and benchmark are compared on the same sequences and the sets were sized to keep that error small against the margins, but it is not quantified here. A model is <em>equivalent</em> to its benchmark if the whole interval lies inside a margin fixed in advance: ±1 percentage point of excess squared error and ±0.02 of implied-persistence gap. For scale, people's implied persistence in the experiment exceeds ρ by 0.11 to 0.45 for ρ up to 0.8, and window-Bayes differs from full Bayes by up to 0.31. It is <em>different</em> if the interval lies wholly outside, and <em>inconclusive</em> otherwise.</p>
   <ul>
     <li><strong>H1</strong>, close to a replication of Balim et al. (2023) and Akram and Vikalo (2024): the largest model with full memory is equivalent to Bayes at every grid ρ, on both measures (6 values of ρ × 2 measures = 12 verdicts).</li>
@@ -202,7 +202,7 @@
     <li><strong>Equivalence at the end of training.</strong> The verdicts hold at 30,000 steps, when the learning rate has decayed to zero; at 10,000 steps the windowed models were not yet equivalent. A different schedule or a shorter budget could leave departures that look like bias and are under-training; the pre-registered re-train at 60,000 steps was the guard, and nothing triggered it.</li>
     <li><strong>Capacity.</strong> The smallest model (1 layer, width 32) departs from its benchmarks, toward a middling persistence. The statement that the network is Bayesian holds here from 2 layers and width 64 upward.</li>
     <li><strong>Fewer seeds outside the primary cells.</strong> Size m and Family B have three seeds per cell; neither enters a decision.</li>
-    <li><strong>Cost.</strong> The GPU-hours and cost in the summary are computed from instance time at the listed price of $0.35 per hour. The cloud work came to about $14.35 including the pilot, over the $12 planned for the sweep: a stalled file copy wasted about six GPU-hours that had to be repeated. It stayed within the pre-registered cloud cap of $15. No grid cell was added or dropped because of it.</li>
+    <li><strong>Cost.</strong> The GPU-hours and cost in the summary are computed from instance time at the listed price of $0.35 per hour. The four sweep instances came to about $14.35; with the pilot instance, if it was billed separately, the total is about $15.06. Either way it is over the $12 planned for the sweep, because a stalled file copy wasted about six GPU-hours that had to be repeated, and at or just over the pre-registered cloud cap of $15. The figures are estimates from instance time, not yet reconciled against the provider's bill. No grid cell was added or dropped because of it.</li>
   </ul>
 </section>
 

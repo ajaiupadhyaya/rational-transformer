@@ -23,7 +23,7 @@ preconditions are met.
   overreaction; AR(1); pre-registration
 - **JEL codes (SSRN):** C11 (Bayesian analysis), C45 (neural networks), C53 (forecasting),
   D83 (learning), D84 (expectations), G41 (behavioural finance)
-- **File:** `paper/the-rational-transformer/the-rational-transformer.pdf` (14 pages, 4 figures)
+- **File to submit:** the academic paper, `docs/paper/_output/paper.pdf` (Quarto/LaTeX, modelled on *Delegating to the Machine*). The house-style report `paper/the-rational-transformer/the-rational-transformer.pdf` is the site/BASIS edition only and is **never** uploaded to SSRN, arXiv or Zenodo.
 
 ## Abstract (1,569 characters; fits arXiv's 1,920 limit)
 

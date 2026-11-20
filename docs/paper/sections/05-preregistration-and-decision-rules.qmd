@@ -1,0 +1,81 @@
+# Pre-registration and decision rules {#sec-prereg}
+
+## The protocol and what kind of registration it is
+
+The hypotheses, the rows each reads, the margins and the decision rules were written down in a pre-registration (`docs/PREREG.md` in the repository), signed off by the author on {{< var prereg.signoff_date >}} and frozen as the annotated git tag {{< var prereg.tag.v1.name >}} at {{< var prereg.tag.v1.time >}} UTC that day. The signature, the register of the decisions taken at signing and the code binding are in [Appendix @sec-app-prereg], with the document itself reproduced verbatim.
+
+It is a self-registration. The document was not lodged with an independent registry, and the tags existed only on the author's machine until the repository was made public on {{< var meta.public_date >}}, after every run had finished. The tag dates are therefore the author's record and not an independent timestamp, and a reader should weigh the pre-registration accordingly. What can be checked from the repository is internal consistency: the tags, the commit history, the run ledgers with their start times, and the decisions log.
+
+The pre-registration binds code as well as words. A gate (`rt/gate.py`) checks the benchmarks against known values, recovers planted effects, and runs a learning check; it records a SHA-256 hash of the simulator, benchmark, model, training and evaluation code and the grid configuration, and the sweep refuses to start unless the gate has passed at the current hash. Every confirmatory run carries gate hash `{{< var prereg.code_hash_short >}}…`. All analysis code lives outside the hashed directories and implements the rules below as written.
+
+## Unit of inference
+
+The unit is the seed. For a given family, size, window, checkpoint, ρ, horizon, benchmark and diagnostic, the seeds give one number each, and the interval reported is the {{< var design.level_pct >}}% Student-t interval of their mean: with {{< var design.n_seeds >}} seeds, the mean plus or minus {{< var design.t95.df4 >}} standard deviations over the square root of {{< var design.n_seeds >}}, on four degrees of freedom. Size m, with {{< var runs.m_seeds >}} seeds under the budget deviation, uses the multiplier {{< var design.t95.df2 >}} on two degrees of freedom. The tables report the standard deviation across seeds, not a standard error.
+
+Two properties of this interval limit what it measures. Cells at the same seed share their training paths (@sec-networks). And all seeds are scored on the same evaluation sets, so the sampling error of those sets is common to every seed and is not in the interval. The interval measures variation across training runs only. Model and benchmark are compared on the same pairs, and the sets ({{< var design.eval_pairs_rho >}} pairs per grid ρ) were sized to make the evaluation error small against the margins, but that error is not quantified in this paper (@sec-limitations).
+
+## Margins and verdicts
+
+Two margins were fixed in the design: ±{{< var design.margin.mse >}} percentage point of excess squared error and ±{{< var design.margin.gap >}} of implied-persistence gap. For scale, people's implied persistence in the experiment exceeds ρ by {{< var human.excess_min >}} to {{< var human.excess_max >}} for ρ up to 0.8, and window-Bayes differs from full Bayes by up to {{< var bench.max_wb_minus_bayes >}}. With lo and hi the ends of the interval and m the margin, a row's verdict is:
+
+- **equivalent** if −m < lo and hi < m;
+- **different** if lo > m or hi < −m, reported with the sign of the mean;
+- **inconclusive** otherwise.
+
+Both margins are two-sided: a model that beats its benchmark at a fixed ρ by more than the margin is not equivalent to it. This is an equivalence design: requiring the whole {{< var design.level_pct >}}% interval inside the margin is the two one-sided tests procedure run at half the nominal level on each side, which is stricter than its usual form. A hypothesis of equivalence is supported only when every interval lies wholly inside its margin, so that wide intervals from noisy training count against it, not for it.
+
+## The hypotheses
+
+The three hypotheses are reproduced here in their registered wording. Each reads only the rows it names: Family A, horizon 1, step {{< var design.steps >}}, the stated benchmark, and the {{< var design.n_rho >}} grid values of ρ.
+
+```{=latex}
+\begingroup\small\setstretch{1}
+```
+
+{{< include _generated/appendix/hypotheses.md >}}
+
+```{=latex}
+\endgroup
+```
+
+In short, H1 asks whether the largest model with the full window is equivalent to Bayes on both measures at every grid ρ ({{< var h1.n_total >}} verdicts). H2 asks the same of the largest model with each finite window against window-Bayes, one window at a time ({{< var h2.n_total >}} verdicts per window). Its registered decision label, "{{< var h2.w2.decision >}}", means equivalence to window-Bayes on every one of those verdicts and nothing more. H3 asks whether, at ρ = {{< var design.h3.rho_lo >}} or {{< var design.h3.rho_hi >}}, the gap against window-Bayes exceeds {{< var design.h3.threshold >}} in at least one of {{< var h3.denominator >}} window-ρ combinations.
+
+## Multiplicity
+
+H1 and each window of H2 require all {{< var h1.n_total >}} of their verdicts to be equivalent. That is an intersection test, which can only make support harder, so no adjustment is applied. The four windows of H2 are reported separately and no pooled statement is made across them.
+
+H3 is a union: support needs only one positive combination among {{< var h3.denominator >}}. It therefore carries a Bonferroni adjustment over those {{< var h3.denominator >}}. A combination is positive at {{< var design.level_pct >}}% if the lower end of its {{< var design.level_pct >}}% interval is above {{< var design.h3.threshold >}}, and positive after adjustment if the lower end of the {{< var design.h3.level_pct >}}% interval, the mean minus {{< var design.h3.t_adj >}} standard deviations over the square root of {{< var design.n_seeds >}}, is above {{< var design.h3.threshold >}}. The denominator is always {{< var h3.denominator >}}. A combination positive at {{< var design.level_pct >}}% but not after adjustment is reported in the fixed form {{< var prereg.h3.report >}} and not as support. The same rows at the other three sizes, {{< var h3.other.denominator >}} combinations, are counted descriptively.
+
+## Separating under-training from bias: the training-length rule
+
+A network that has not finished training departs from its benchmark, and that departure must not be reported as a bias. The first draft of the protocol handled this with a plateau test on the learning curve: a run was converged if its squared error at step {{< var design.steps >}} was within {{< var design.conv_tol_pct >}}% of its value at step {{< var design.step_mid >}}, and an unconverged cell could not yield a verdict. Under a learning rate that decays to zero at the last step that test cannot do the job: error can still be falling by more than that tolerance while the model is already inside the equivalence margin, so the rule would have marked most cells unconverged. It was replaced before the freeze (owner decision 2, [Appendix @sec-app-prereg]). The plateau column is still computed and printed for every run and cell (@tbl-convergence-cells, [Appendix @sec-app-supplementary]), and it changes no verdict.
+
+The binding rule is a re-test at twice the training length. A *flagged finding* is, at size l, any "different" verdict in H1 or H2, or any H3 combination that is positive after adjustment. For every cell with a flagged finding, all seeds are to be re-trained from scratch under a configuration identical except for {{< var design.steps_long >}} steps, and the finding survives if the same verdict holds there in the same column, at the same ρ, with the same sign. A finding that does not survive is reported as {{< var prereg.not_robust >}}, never as a bias; one that the budget does not cover is reported as {{< var prereg.not_tested >}}. "Equivalent" and "inconclusive" verdicts are not re-tested. In the event nothing was flagged (@sec-h3), so the rule was never invoked. Its consequence for interpretation is that the equivalence verdicts themselves rest on the registered training length alone (@sec-limitations).
+
+## Grade of evidence
+
+@tbl-grade states, for each stream of results, the data it uses and the weight it can bear. Only the first row is confirmatory. Wherever exploratory, descriptive or illustrative material appears below it is labelled in the sentence that reports it.
+
+```{=latex}
+\begingroup\footnotesize\raggedright\setstretch{1}
+```
+
+{{< include _generated/tables/grade.md >}}
+
+```{=latex}
+\endgroup
+```
+
+## What was seen before the freeze
+
+Before the tag, the author and the assistant had seen results from one seed of size s trained for {{< var prefreeze.steps >}} steps, in the full-window cell and in one windowed cell, under several output heads; all of it is listed number by number in section 9 of the pre-registration, reproduced in [Appendix @sec-app-disclosures]. Two facts about that exposure matter. The architecture was chosen on it: a linear head left the model at {{< var prefreeze.linear_r1_mse >}}% excess error at ρ = 1, and the affine head of @eq-head removed that ({{< var prefreeze.affine_r1_mse >}}%). The tables on which the choice was made included numbers at ρ = {{< var design.h3.rho_lo >}} and {{< var design.h3.rho_hi >}} and in a windowed cell, the regions H2 and H3 read; in all of them every variant showed a small negative gap at horizon 1. The choice was made on a scale failure at ρ = 1 and not on the sign of a gap, but the exposure is real, and the confirmatory claims are claims about this architecture. Nothing from sizes xs, m or l, from any seed other than 0, from Family B, or from training at {{< var design.steps >}} steps had been seen.
+
+## Deviations and their timing
+
+Every change after the tag is logged in the decisions log and tagged; [Appendix @sec-app-deviations] lists every entry of the log with its date and whether confirmatory results had been seen, and reproduces the log verbatim. There are four deviation tags.
+
+{{< var prereg.tag.v11.name >}} (tagged {{< var prereg.tag.v11.utc >}} UTC) is the budget deviation described in @sec-networks. It was decided from the pilot's timing, before any confirmatory run existed: the first confirmatory run started at {{< var ledger.first_start_time >}} UTC, {{< var timing.minutes_tag_to_first_run >}} minutes after the tag.
+
+{{< var prereg.tag.v12.name >}} (tagged {{< var prereg.tag.v12.utc >}} UTC) adds a rule the pre-registration lacked: a group with fewer seeds than scheduled is incomplete, is printed and marked, and never enters a decision. {{< var prereg.tag.v13.name >}} and {{< var prereg.tag.v14.name >}} (tagged at {{< var prereg.tag.v13.time >}} and {{< var prereg.tag.v14.time >}} UTC the same night) fix the rules of the illustrative survey comparison and wire it into the report. These three were fixed *after confirmatory runs had started and their metrics files existed*: the first primary cells had metrics files by {{< var timing.primary_metrics >}} UTC. They were fixed before the analysis code had been run on any real metrics and before any trained model was run on survey data. The evaluation step prints each run's prior-set excess error, gap and κ to its log, so per-run diagnostics existed in readable form at the time, although no verdict and no summary of H1 to H3 had been computed. In the event the incomplete-seed rule never applied, since every scheduled run finished, and the survey comparison is not a test. The freeze itself and the budget deviation preceded any confirmatory run.
+
+No deviation followed the reading of H1 to H3. The later entries of the log record the spend, the venue decision, the timing just described and the publication of the repository.

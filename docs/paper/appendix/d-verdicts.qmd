@@ -1,0 +1,13 @@
+# Every verdict, with seed values {#sec-app-verdicts}
+
+This appendix prints every row of `results/summary.csv`: for each cell that was run (family, size and window), each of the three checkpoints, each of the seven evaluation sets (six grid values of ρ and the prior set), each horizon from 1 to 6 and both benchmarks, the seed mean, the standard deviation across seeds, the 95% Student-t interval, the verdict under the pre-registered margins and the seed values themselves, followed by the seed means of the other diagnostics. The study has no robustness rows; this appendix is the complete record from which every table and figure of the paper is drawn. The cells are ordered with the primary size first: Family A at sizes l, m, s and xs, then Family B. The hypotheses read only the rows named in @sec-prereg; every other row is reported whatever it shows, carries no error control, and is exploratory or descriptive.
+
+```{=latex}
+\fancyhead[C]{\small\nouppercase{\rightmark}}
+```
+
+{{< include _generated/appendix/verdicts.md >}}
+
+```{=latex}
+\fancyhead[C]{}
+```

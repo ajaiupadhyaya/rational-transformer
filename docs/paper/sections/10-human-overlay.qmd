@@ -1,0 +1,41 @@
+# The human overlay {#sec-overlay}
+
+This section is descriptive. No hypothesis reads it, it compares curves computed on different data, and nothing in it is a test.
+
+## Construction
+
+The laboratory subject of @afrouzi2023overreaction is not told the mean or the scale of the series. Family B (@eq-family-b) gives the networks the same problem: the mean and the scale are unknown, with the priors of @sec-environment, and both must be learned along with ρ. Under the budget deviation Family B was run at size l for the full window and W = 4 only, with {{< var runs.b_seeds >}} seeds each. W = 4 was fixed by that deviation, from timing, and was not fitted to the human curve.
+
+The human curve is the published summary of Experiment 1 of @afrouzi2023overreaction: implied persistence by ρ with participant-clustered standard errors, {{< var human.participants_min >}} to {{< var human.participants_max >}} participants per value of ρ. Only those six rows of derived statistics are used and held in the repository ([Appendix @sec-app-replication]). The intervals drawn are the point estimate plus or minus 1.96 standard errors.
+
+{{< include _generated/figures/overlay.md >}}
+
+```{=latex}
+\begingroup\footnotesize\raggedright\setstretch{1}
+```
+
+{{< include _generated/tables/overlay.md >}}
+
+```{=latex}
+\endgroup
+```
+
+## The networks trace their benchmarks
+
+The Family B networks sit on their Bayes benchmarks (@fig-overlay, @tbl-overlay). Against the matching benchmark every mean gap is within ±{{< var fb.max_abs_gap >}}, and {{< var fb.n_equivalent >}} of {{< var fb.n_verdicts >}} verdicts are equivalent (six grid values of ρ and the prior set, two measures, two windows; @tbl-overlay-verdicts, [Appendix @sec-app-supplementary]). The exception is {{< var fb.exception.measure >}} at W = {{< var fb.exception.window >}} and ρ = {{< var fb.exception.rho >}}, {{< var fb.exception.mean >}} points, a "{{< var fb.exception.verdict >}}" verdict on {{< var runs.b_seeds >}} seeds, where random-walk paths with an unknown mean are hardest. These verdicts use the Family A margins and t with two degrees of freedom; they were not registered as tests.
+
+The four-observation network overreacts strongly against the truth: its implied persistence at ρ = 0 is {{< var fb.w4.r00.model >}}, where the truth is zero. But it does so no more, within the margin, than a Bayesian with four observations, whose implied persistence there is {{< var fb.w4.r00.bench >}}.
+
+## Where people sit
+
+People's implied persistence is {{< var human.r00.ip >}} at ρ = 0 (interval {{< var human.r00.lo >}} to {{< var human.r00.hi >}}) and {{< var human.r02.ip >}} at ρ = 0.2 ({{< var human.r02.lo >}} to {{< var human.r02.hi >}}). At both they lie between the two Bayes curves: above full Bayes ({{< var fb.full.r00.bench2 >}} and {{< var fb.full.r02.bench2 >}}) and, at ρ = 0, below the four-observation curve ({{< var fb.w4.r00.bench2 >}}). At ρ = 0.4, 0.6 and 0.8 their point estimates ({{< var human.r04.ip >}}, {{< var human.r06.ip >}} and {{< var human.r08.ip >}}) are above even the four-observation curve ({{< var fb.w4.r04.bench2 >}}, {{< var fb.w4.r06.bench2 >}} and {{< var fb.w4.r08.bench2 >}}), which is the region where H3 looked for a network doing the same. Each of those human intervals nonetheless includes the four-observation curve. Over the grid, the human interval includes the four-observation Bayes curve at {{< var overlay.n_human_ci_incl_w4 >}} of the {{< var design.n_rho >}} values of ρ, every one from ρ = {{< var overlay.first_rho_incl_w4 >}} upward; the exception is ρ = 0, where people are below it.
+
+## What the overlay does not show
+
+The overlay does not show that people overreact beyond an information-limited Bayesian, and the reason is worth stating exactly, because it qualifies the premise of H3. In Family A the matched Bayesian underreacts against the truth at ρ = {{< var design.h3.rho_lo >}} and {{< var design.h3.rho_hi >}}, so overreaction there cannot be rational learning. In Family B that premise fails. With the mean and scale unknown, the Bayes benchmarks are themselves above the truth at those values: full Bayes has implied persistence {{< var fb.full.r06.bench2 >}} and {{< var fb.full.r08.bench2 >}}, and the four-observation Bayesian {{< var fb.w4.r06.bench2 >}} and {{< var fb.w4.r08.bench2 >}}. A forecaster who does not know the mean attributes part of a deviation of the series from its unknown mean to the level, and carries the current value forward more than one who knows the mean is zero. The matched Bayesian itself overreacts at high persistence in the setting closest to the experiment, and the human intervals include its curve. The sharp contrast that motivates H3 belongs to the known-mean family and does not carry over.
+
+What the overlay does show is narrower. A Bayesian with a short window and an unknown mean reproduces the direction of the human curve, overreaction at every ρ below one and more of it at low ρ, and from ρ = {{< var overlay.first_rho_incl_w4 >}} upward the human intervals include it. That is a statement about the shape of two curves. It is not evidence that people are Bayesians with four observations: the window was not estimated, the human intervals are wide, the priors of Family B were fixed in advance and were not matched to the experiment, and the comparison is not a test.
+
+## Different data
+
+The overlay compares curves, not forecasts of the same series. People forecast the experiment's series; the networks and benchmarks forecast simulated Family B series. Implied persistence is a slope and is unchanged when a series is rescaled, which is what lets the comparison survive the difference in units. It does not make the two settings the same. The innovations of the experiment's series have a standard deviation of about {{< var aklmt.innov_sd_min >}} to {{< var aklmt.innov_sd_max >}} in raw units, far outside the Family B prior for σ, whose mean is one (@tbl-aklmt-design, [Appendix @sec-app-supplementary]); that matters for feeding raw human series to the networks, which this paper does not do. The pre-registration required this check to be reported with the overlay, and noted that it affects only the overlay.

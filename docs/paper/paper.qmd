@@ -1,0 +1,115 @@
+---
+title: "The Rational Transformer: What a Network Trained to Forecast Gets Wrong, and Whether It Is Bias or Missing Information"
+author: "Ajai Upadhyaya"
+keywords: [expectations formation, overreaction, Bayesian learning, limited memory, in-context learning, transformers, pre-registration]
+---
+
+<!-- Working-paper title page, set in the body so that the date, links and abstract come from
+     variables. \maketitle is emptied in _quarto.yml. -->
+
+```{=latex}
+\thispagestyle{plain}
+\begin{center}
+{\small\scshape Working paper}\\[2.2em]
+{\LARGE\bfseries The Rational Transformer\par}
+\vspace{0.6em}
+{\Large What a Network Trained to Forecast Gets Wrong,\\ and Whether It Is Bias or Missing Information\par}
+\vspace{2em}
+```
+
+<!-- AUTHOR: affiliation (add a line under the name, or to the footnote) -->
+<!-- AUTHOR: contact e-mail (add to the footnote) -->
+[Ajai Upadhyaya]{.smallcaps}^[Code, pre-registration, decisions log and every result: [{{< var meta.repo_short >}}]({{< var meta.repo_url >}}). Archived record: DOI {{< var meta.doi >}} (reserved). The study was carried out with an AI assistant under the author's direction; see the Statements. The pre-registration is a tagged document in the author's repository and was not lodged with an independent registry (@sec-prereg).]
+
+```{=latex}
+\vspace{0.8em}
+```
+
+This version: {{< var meta.date >}}
+
+```{=latex}
+\end{center}
+\vspace{1.5em}
+\begin{center}{\bfseries Abstract}\end{center}
+\vspace{-0.2em}
+\begin{quote}\small\setlength{\parskip}{0pt}
+```
+
+{{< include sections/00-abstract.qmd >}}
+
+```{=latex}
+\end{quote}
+\vspace{0.5em}
+\begin{quote}\small
+```
+
+**JEL codes:** C11, C45, C53, D83, D84, G41.
+
+**Keywords:** expectations formation; overreaction; Bayesian learning; limited memory; in-context learning; transformers; pre-registration.
+
+```{=latex}
+\end{quote}
+\newpage
+\setcounter{tocdepth}{2}
+{\hypersetup{linkcolor=black}\tableofcontents}
+\newpage
+```
+
+# Executive brief {.unnumbered}
+
+{{< include brief_body.qmd >}}
+
+{{< include sections/01-introduction.qmd >}}
+
+{{< include sections/02-related-literature.qmd >}}
+
+{{< include sections/03-environment-and-benchmarks.qmd >}}
+
+{{< include sections/04-networks-training-evaluation.qmd >}}
+
+{{< include sections/05-preregistration-and-decision-rules.qmd >}}
+
+{{< include sections/06-h1.qmd >}}
+
+{{< include sections/07-h2.qmd >}}
+
+{{< include sections/08-h3.qmd >}}
+
+{{< include sections/09-exploratory.qmd >}}
+
+{{< include sections/10-human-overlay.qmd >}}
+
+{{< include sections/11-survey-comparison.qmd >}}
+
+{{< include sections/12-limitations.qmd >}}
+
+{{< include sections/13-conclusion.qmd >}}
+
+{{< include sections/14-statements.qmd >}}
+
+# References {.unnumbered}
+
+::: {#refs}
+:::
+
+```{=latex}
+\clearpage
+\appendix
+\addtocontents{toc}{\protect\setcounter{tocdepth}{1}}
+```
+
+::: {.appendix}
+
+{{< include appendix/a-preregistration.qmd >}}
+
+{{< include appendix/b-deviations.qmd >}}
+
+{{< include appendix/c-disclosures.qmd >}}
+
+{{< include appendix/d-verdicts.qmd >}}
+
+{{< include appendix/e-data-replication.qmd >}}
+
+{{< include appendix/f-supplementary-tables.qmd >}}
+
+:::

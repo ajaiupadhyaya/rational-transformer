@@ -1,0 +1,95 @@
+# Exploratory results {#sec-exploratory}
+
+Nothing in this section enters a decision. The analyses were listed as exploratory in the pre-registration, are reported in full whatever they show, and carry no error control across the many rows they read. The verdict labels are used as descriptions.
+
+## Model size
+
+@tbl-size-counts counts, for every size and window, how many of the {{< var h2.n_total >}} horizon-1 verdicts at step {{< var design.steps >}} are equivalent, against the matching benchmark (window-Bayes for a finite window, Bayes for the full window). Sizes s and m are equivalent to their benchmarks on {{< var size.s.total.equivalent >}} and {{< var size.m.total.equivalent >}} of {{< var size.n_per_size >}} verdicts, as size l is on all of its own. Size m ran on {{< var runs.m_seeds >}} seeds, so its intervals use t with two degrees of freedom and are wider for a given spread.
+
+```{=latex}
+\begingroup\footnotesize\raggedright\setstretch{1}
+```
+
+{{< include _generated/tables/size-counts.md >}}
+
+```{=latex}
+\endgroup
+```
+
+The smallest model, with {{< var design.size.xs.layers >}} layer of width {{< var design.size.xs.d >}} and {{< var design.size.xs.params >}} parameters, is the exception. It is "different" on {{< var size.xs.total.different >}} of its {{< var size.n_per_size >}} verdicts and inconclusive on {{< var size.xs.total.inconclusive >}} more (every one is listed in @tbl-xs-departures, [Appendix @sec-app-supplementary]). Its departures have a shape: it pulls low-persistence series up and mid-persistence series down, towards a middling persistence. With the full window its implied persistence is above Bayes by {{< var size.xs.full.r00.gap.mean >}} at ρ = 0 and below it by {{< var size.xs.full.r06.gap.mean >}} at ρ = 0.6. The departures are largest at W = 16 and with the full window ({{< var size.xs.w16.different >}} and {{< var size.xs.full.different >}} "different" verdicts) and nearly vanish at W = 2 ({{< var size.xs.w2.inconclusive >}} inconclusive verdict, none different), where the window and not the network is the binding limit: with two observations there is little for a larger network to compute. Its largest mean excess error is {{< var size.xs.max_mse_mean >}} points.
+
+On the rows H3 reads, the smallest model's mean gaps lie between {{< var size.xs.h3.min_mean >}} and {{< var size.xs.h3.max_mean >}}: all {{< var size.xs.h3.n_mean_negative >}} are negative (@fig-size). Below the benchmark at ρ = {{< var design.h3.rho_lo >}} and {{< var design.h3.rho_hi >}} is underreaction beyond window-Bayes, the opposite of the human signature. A capacity-limited network, in this configuration, errs towards the middle of its prior and not towards the latest observation. This is one seed-averaged pattern at one small size and is not tested; the depth-separation result of @cole2025context for single-layer models is the nearest theoretical statement, and it concerns linear attention.
+
+{{< include _generated/figures/size.md >}}
+
+## Training length
+
+Equivalence at size l arrives late (@tbl-traces, @fig-traces). At {{< var design.step_early >}} and {{< var design.step_mid >}} steps the windowed models are equivalent on at most {{< var trace.windowed.max_equivalent_early >}} of {{< var h2.n_total >}} verdicts per window, with mean excess errors of up to {{< var trace.windowed.max_mse_early >}} points; at {{< var design.steps >}} steps, the end of a learning-rate schedule that decays to zero, they are equivalent on all {{< var h2.n_total >}}. The full-window model is equivalent on {{< var trace.s3000.full.equivalent >}} of {{< var h1.n_total >}} at {{< var design.step_early >}} steps and on {{< var trace.s10000.full.equivalent >}} at {{< var design.step_mid >}}. Excess error is not monotone over the three checkpoints for the windowed cells: several are further from the benchmark at {{< var design.step_mid >}} steps than at {{< var design.step_early >}} (@fig-traces-excess, [Appendix @sec-app-supplementary]), which is what one would expect of an optimiser still moving at a high learning rate and is one reason a plateau rule is uninformative here.
+
+```{=latex}
+\begingroup\footnotesize\raggedright\setstretch{1}
+```
+
+{{< include _generated/tables/traces.md >}}
+
+```{=latex}
+\endgroup
+```
+
+{{< include _generated/figures/traces.md >}}
+
+The pre-registration asked whether a network passes through an overreacting phase before converging. The traces show none at high persistence, though with three checkpoints they cannot rule one out. On the rows H3 reads, the windowed mean gaps are negative in {{< var trace.s3000.h3.n_negative >}} of {{< var h3.denominator >}} combinations at {{< var design.step_early >}} steps (from {{< var trace.s3000.h3.min_mean >}} to {{< var trace.s3000.h3.max_mean >}}) and in {{< var trace.s10000.h3.n_negative >}} of {{< var h3.denominator >}} at {{< var design.step_mid >}} steps (from {{< var trace.s10000.h3.min_mean >}} to {{< var trace.s10000.h3.max_mean >}}), with intervals wide enough that {{< var trace.s3000.h3.n_inconclusive >}} of the {{< var h3.denominator >}} are inconclusive at the first checkpoint and {{< var trace.s10000.h3.n_inconclusive >}} at the second. The full-window gaps at those two values of ρ are slightly positive at the earlier checkpoints ({{< var trace.full.h3.min_mean >}} to {{< var trace.full.h3.max_mean >}}), with {{< var trace.full.h3.n_incl_zero >}} of {{< var trace.full.h3.n >}} intervals including zero. The budget deviation removed the three earliest of the six planned checkpoints, so the first part of training is not observed at all.
+
+The plateau rule, printed and never binding, is met by {{< var conv.l.n_converged >}} of the {{< var conv.l.n_runs >}} size-l runs (@tbl-convergence-cells, [Appendix @sec-app-supplementary]). Had it been allowed to override verdicts, as the first draft of the protocol intended, most primary cells would have yielded no verdict although their intervals lie far inside the margins. That is the reason it was demoted before the freeze (@sec-prereg).
+
+## The residual at ρ = 0
+
+Before the freeze, one seed of a small model trained for {{< var prefreeze.steps >}} steps overstated persistence at ρ = 0 against Bayes by {{< var prefreeze.rho0_low >}} to {{< var prefreeze.rho0_high >}}, depending on the output head, and the pre-registration listed as exploratory whether that closes with training and size. It closes almost entirely but not completely (@tbl-rho0). At size l and step {{< var design.steps >}} the gap at ρ = 0 is positive at every memory length, between {{< var rho0.min_mean >}} and {{< var rho0.max_mean >}}, and its interval, which carries seed-to-seed variation only, excludes zero in {{< var rho0.n_excl_zero >}} of {{< var rho0.n_windows >}} windows; the largest upper end is {{< var rho0.max_hi >}}, about half the margin. The residual is smallest at W = 2 and with the full window and largest at W = 16. At the smallest size it is larger at every window, by up to an order of magnitude and more (@fig-rho0, [Appendix @sec-app-supplementary]).
+
+```{=latex}
+\begingroup\footnotesize\raggedright\setstretch{1}
+```
+
+{{< include _generated/tables/rho0.md >}}
+
+```{=latex}
+\endgroup
+```
+
+Two readings are available and the data do not separate them. At ρ = 0 the optimal slope on the current value is small and the loss is flat in it, so a network a short distance from the optimum pays almost nothing in squared error for a slope slightly too high; the excess error there is a few tenths of a point at most. Or the affine head, whose slope starts at zero and must be learned upward for most of the prior, settles slightly high where the target slope is lowest. Either way the direction, overstated persistence at the least persistent series, is the direction of the human pattern at low ρ, and it is the largest and most consistent place in the confirmatory rows where the network sits measurably on that side of its benchmark. It is not the only one: {{< var gappos.n_other >}} other gap intervals at size l lie wholly above zero, all of them smaller ({{< var gappos.other_cells >}}; the largest of these means is {{< var gappos.other_max_mean >}}). It is small, a few thousandths against human excesses of tenths, and it is inside the registered margin.
+
+## Horizons two to six
+
+The hypotheses read horizon 1. At horizons 2 to {{< var design.horizons >}}, size l at step {{< var design.steps >}} is equivalent to its matching benchmark on {{< var horizons.n_equivalent >}} of {{< var horizons.n_verdicts >}} verdicts ({{< var design.n_windows >}} windows, five horizons, {{< var h1.n_total >}} verdicts each; @tbl-horizons, @fig-horizons in [Appendix @sec-app-supplementary]). The largest absolute mean gap is {{< var horizons.max_abs_gap_mean >}} and the largest absolute mean excess error {{< var horizons.max_abs_mse_mean >}} points. The gap is smaller at horizons 2–6 than at horizon 1, as one would expect, since implied persistence at horizon $h$ is of order $\rho^{h}$; it does not fall monotonically with the horizon.
+
+```{=latex}
+\begingroup\footnotesize\raggedright\setstretch{1}
+```
+
+{{< include _generated/tables/horizons.md >}}
+
+```{=latex}
+\endgroup
+```
+
+## Error on revision
+
+The error-on-revision coefficient b is the diagnostic of the survey literature [@coibion2015information; @bordalo2020overreaction]. @tbl-eor reports it at horizon 1 for size l at step {{< var design.steps >}}: the benchmark's own coefficient, the model's, and their difference computed seed by seed, with the {{< var design.level_pct >}}% t interval of the mean difference. No margin was pre-registered for b, so no verdict is attached and the intervals are descriptive.
+
+```{=latex}
+\begingroup\scriptsize\raggedright\setstretch{1}
+```
+
+{{< include _generated/tables/eor.md >}}
+
+```{=latex}
+\endgroup
+```
+
+Three things stand out. First, the benchmark's own coefficient is far from zero at a fixed ρ and changes sign across the grid. With four observations window-Bayes has b = {{< var eor.h1.w4.r00.bench >}} at ρ = 0, which read against zero would be called strong overreaction, and {{< var eor.h1.w4.r08.bench >}} at ρ = 0.8, which would be called underreaction; full Bayes has {{< var eor.h1.full.r00.bench >}} and {{< var eor.h1.full.r08.bench >}}. A rational learner fails the full-information efficiency test in both directions, depending on where the truth lies in its prior, which is the point of @frank2023behavioral made exact. Second, the model's coefficient tracks the benchmark's (@fig-eor, [Appendix @sec-app-supplementary]): over the {{< var eor.h1.n_rows >}} window-ρ rows at horizon 1 the largest absolute mean difference is {{< var eor.h1.max_abs_diff >}}, at W = {{< var eor.h1.max_w >}} and ρ = {{< var eor.h1.max_rho >}}, and below ρ = 1 it is {{< var eor.h1.max_abs_diff_ex1 >}}. Third, the differences are small but not all indistinguishable from zero: {{< var eor.h1.n_excl_zero >}} of the {{< var eor.h1.n_rows >}} intervals exclude zero. With no margin and no adjustment across rows, this says only that the seed-to-seed spread of b is small enough to resolve differences of a few thousandths.
+
+At horizons 2 to 5 (@tbl-eor-horizons, [Appendix @sec-app-supplementary]) the picture is the same with one caution. Over all {{< var eor.all.n_rows >}} rows the largest absolute mean difference is {{< var eor.all.max_abs_diff >}}, at the {{< var eor.all.max_w >}} window, horizon {{< var eor.all.max_h >}} and ρ = {{< var eor.all.max_rho >}}, with an interval from {{< var eor.all.max_lo >}} to {{< var eor.all.max_hi >}} that includes zero. At ρ = 0 and long horizons both forecasts are close to zero whatever the history, revisions are tiny, and the slope of errors on revisions is poorly determined; the large differences there are noise in a ratio with a small denominator and not a behavioural difference. The coefficient κ, the response of the model's deviation from full Bayes to the Bayes surprise, is at most {{< var kappa.full.max_abs >}} in absolute value for the full-window model on the grid (@tbl-kappa, [Appendix @sec-app-supplementary]).
+
+## Arms that were dropped
+
+Two exploratory arms listed in the design, a prior mismatched between training and evaluation and a break in ρ in mid-sequence, were dropped at the sign-off (owner decision 6, [Appendix @sec-app-prereg]). They were not built and were not run.

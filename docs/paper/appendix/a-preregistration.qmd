@@ -1,0 +1,3 @@
+# Pre-registration {#sec-app-prereg}
+
+{{< include _generated/appendix/preregistration.md >}}

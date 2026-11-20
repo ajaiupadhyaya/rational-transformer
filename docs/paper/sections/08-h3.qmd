@@ -1,0 +1,37 @@
+# H3: overreaction where the matched Bayesian underreacts {#sec-h3}
+
+**H3 is {{< var h3.decision >}}: {{< var h3.statement >}}.** The registered rule reads: "{{< var prereg.h3.rule >}}", where "{{< var prereg.h3.positive >}}" None of the {{< var h3.denominator >}} primary combinations is positive at {{< var design.level_pct >}}% ({{< var h3.k95 >}} of {{< var h3.denominator >}}), and none is positive after the Bonferroni adjustment ({{< var h3.k_adjusted >}} of {{< var h3.denominator >}}). @tbl-h3-confirmatory gives every combination and @fig-h3 draws them against the threshold.
+
+```{=latex}
+\begingroup\scriptsize\raggedright\setstretch{1}
+```
+
+{{< include _generated/tables/h3-confirmatory.md >}}
+
+```{=latex}
+\endgroup
+```
+
+{{< include _generated/figures/h3.md >}}
+
+## Why these rows
+
+H3 reads the region where rational learning and the human pattern part. At ρ = {{< var design.h3.rho_lo >}} and {{< var design.h3.rho_hi >}}, window-Bayes underreacts against the truth at every finite window (@tbl-benchmarks), while people in the experiment overreact against it. A forecaster who is rational given a short window cannot produce overreaction there. A network whose gap against window-Bayes were positive and beyond the margin at these rows would be doing something that information-limited Bayesian learning does not do, in the direction people go. That is the human signature the hypothesis is named for. The contrast is sharp only because Family A tells the forecaster the mean and the scale. When they are unknown, as they are for the experimental subject, the matched Bayesian itself overreacts at these rows (@sec-overlay), so H3 tests the network against its own benchmark and is not a test of people.
+
+## Estimates
+
+The {{< var h3.denominator >}} mean gaps lie between {{< var h3.min_mean >}} and {{< var h3.max_mean >}}. None is above zero: {{< var h3.n_mean_positive >}} of {{< var h3.denominator >}} means are positive. At W = 2 the mean gap is {{< var h3.w2.r06.mean >}} at ρ = 0.6 ({{< var design.level_pct >}}% interval {{< var h3.w2.r06.lo >}} to {{< var h3.w2.r06.hi >}}) and {{< var h3.w2.r08.mean >}} at ρ = 0.8 ({{< var h3.w2.r08.lo >}} to {{< var h3.w2.r08.hi >}}); at W = 4, {{< var h3.w4.r06.mean >}} ({{< var h3.w4.r06.lo >}} to {{< var h3.w4.r06.hi >}}) and {{< var h3.w4.r08.mean >}} ({{< var h3.w4.r08.lo >}} to {{< var h3.w4.r08.hi >}}); at W = 8, {{< var h3.w8.r06.mean >}} ({{< var h3.w8.r06.lo >}} to {{< var h3.w8.r06.hi >}}) and {{< var h3.w8.r08.mean >}} ({{< var h3.w8.r08.lo >}} to {{< var h3.w8.r08.hi >}}); at W = 16, {{< var h3.w16.r06.mean >}} ({{< var h3.w16.r06.lo >}} to {{< var h3.w16.r06.hi >}}) and {{< var h3.w16.r08.mean >}} ({{< var h3.w16.r08.lo >}} to {{< var h3.w16.r08.hi >}}). {{< var h3.n_incl_zero >}} of the {{< var h3.denominator >}} intervals include zero; the one that does not lies just below it. The adjusted lower ends, which the decision reads, lie between {{< var h3.min_lo_adj >}} and {{< var h3.max_lo_adj >}}, against a threshold of {{< var design.h3.threshold >}}.
+
+## How tight the null is
+
+A null result is informative only to the extent that it excludes the effect it looked for, and here the test has no conventional power calculation: the unit is the seed, and the spread across seeds was not known in advance. The intervals themselves give the answer after the fact. The largest upper end of a {{< var design.level_pct >}}% interval among the {{< var h3.denominator >}} combinations is {{< var h3.max_hi >}}, about one {{< var h3.threshold_over_max_hi >}}th of the {{< var design.h3.threshold >}} threshold; the largest upper end of a Bonferroni-adjusted {{< var design.h3.level_pct >}}% interval is {{< var h3.max_hi_adj >}}. For the mean over training seeds, scored on these evaluation sets, an overreaction beyond window-Bayes of more than about a thousandth in slope is therefore excluded by the seed-to-seed interval at the {{< var design.level_pct >}}% level at each combination, and one of two thousandths at the adjusted level. The intervals carry seed-to-seed variation only: the sampling error of the shared evaluation sets, {{< var design.eval_pairs_rho >}} pairs at each ρ, is not in them (@sec-prereg), nor is the effect of the reduced-precision arithmetic of the cloud cells, which moved the gap by up to {{< var tf32.max_gap_shift >}} when two cells were re-evaluated in full precision. For comparison, people's implied persistence at ρ = 0.8 is {{< var human.r08.ip >}}, above the truth by more than a tenth; the excluded region begins two orders of magnitude below that. Had the true gap at any of these rows been at the threshold, an interval of this width would have sat far above zero: the standard deviations across seeds are at most {{< var h3.max_sd >}} (@tbl-h3-confirmatory), a twentieth of the threshold.
+
+The same rows at the other sizes point the same way. Of the {{< var h3.other.denominator >}} combinations at sizes xs, s and m, {{< var h3.other.k95 >}} are positive at {{< var design.level_pct >}}% (descriptive; @tbl-h3-other-sizes, [Appendix @sec-app-supplementary]). The smallest model does leave the margin at these rows, but on the negative side, which is underreaction beyond window-Bayes (exploratory; @sec-exploratory).
+
+## The training-length check
+
+A flagged finding is a size-l "different" verdict in H1 or H2 or an H3 combination positive after adjustment. The count of flagged findings is {{< var flagged.n >}}. The pre-registered re-training at {{< var design.steps_long >}} steps was therefore not needed and was not run, and no finding is reported as {{< var prereg.not_robust >}} or as {{< var prereg.not_tested >}}.
+
+## Reading
+
+Nothing in the confirmatory rows points in the human direction. The null is a null for one architecture, at one training length, on simulated AR(1) data. It says that this network, trained to the end of this schedule, has reached the information-limited Bayesian forecast at high persistence with no residual above it. It does not say that no network overreacts beyond its information, and by @prp-optimal it could not have been otherwise for a network that optimised its loss exactly. What the result rules out is that the architecture or the optimiser, in this configuration, leaves a systematic overreaction at the end of training.
