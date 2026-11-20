@@ -15,12 +15,12 @@
 
 <section class="cover">
   <div class="cover__block"></div>
-  <div class="cover__kicker"><span>Report · Esn-00XX</span><span>November 2026</span></div>
+  <div class="cover__kicker"><span>Report · Esn-0015</span><span>November 2026</span></div>
   <h1 class="cover__title">The Rational Transformer</h1>
   <p class="cover__subtitle">Small transformers trained only to minimise forecast error on autoregressive data, measured against exact Bayes forecasters that see exactly what the network sees.</p>
   <div class="cover__byline">Ajai Upadhyaya</div>
   <p class="cover__abstract"><strong>Abstract</strong>In forecasting experiments on AR(1) series, people overreact to news, and more so when the series is less persistent. A rational forecaster who has to learn persistence also departs from the truth at any fixed persistence, because its estimate is pulled toward the prior. So a deviation from the full-information forecast is not evidence of a bias. We train causal transformers from scratch on AR(1) sequences with persistence drawn from U[0, 1], at four sizes and five memory lengths, and compare each with the exact Bayes forecaster that holds the same prior and the same window of data. Hypotheses, margins and decision rules were frozen in a tagged pre-registration before any confirmatory run. The largest model with full memory is equivalent to Bayes on all 12 pre-registered verdicts. With its memory cut to 2, 4, 8 or 16 observations it is equivalent to window-Bayes on all 12 verdicts at every window, so what it gets wrong relative to full Bayes is accounted for, within the margins, by the information it lacks. In none of the 8 window-persistence combinations tested does it overreact where window-Bayes underreacts, at 95% or after adjustment; no mean gap there is above zero. These verdicts hold at the last checkpoint, after the learning rate has decayed to zero; at 10,000 of 30,000 steps the windowed models are not yet equivalent. The Bayes forecast is the squared-error optimum, so this is a result about training: by the end of its schedule this network has reached the information-limited Bayesian forecast, with no residual in the human direction.</p>
-  <div class="cover__foot"><span>esnupi · Publications · No. XX</span><span>ajaiupadhyaya.com/publications</span></div>
+  <div class="cover__foot"><span>esnupi · Publications · No. 33</span><span>ajaiupadhyaya.com/publications</span></div>
 </section>
 
 <section>

@@ -7,7 +7,7 @@ preconditions are met.
 
 - [x] Repository public with the `prereg-v1` to `prereg-v1.4` tags pushed (20 November 2026):
       https://github.com/ajaiupadhyaya/rational-transformer. The URL is in section 05 of the paper.
-- [ ] Cover placeholders set: "Report · Esn-00XX" and "No. XX".
+- [x] Cover numbers set: Report Esn-0015, Publications No. 33 (next in the esnupi series after Esn-0014 / No. 32).
 - [ ] Cloud spend confirmed in the Thunder Compute console. If it differs from about $14.35,
       update the summary card and the Cost bullet in section 10.
 - [ ] Final PDF read once, start to finish.
