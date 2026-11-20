@@ -10,14 +10,14 @@ keywords: [expectations formation, overreaction, Bayesian learning, limited memo
 ```{=latex}
 \thispagestyle{plain}
 \begin{center}
-{\small\scshape Working paper}\\[2.2em]
+\vspace*{1.2em}
 {\LARGE\bfseries The Rational Transformer\par}
 \vspace{0.6em}
 {\Large What a Network Trained to Forecast Gets Wrong,\\ and Whether It Is Bias or Missing Information\par}
 \vspace{2em}
 ```
 
-[Ajai Upadhyaya]{.smallcaps}^[Code, pre-registration, decisions log and every result: [{{< var meta.repo_short >}}]({{< var meta.repo_url >}}). Archived record: DOI {{< var meta.doi >}} (reserved). The study was carried out with an AI assistant under the author's direction; see the Statements. The pre-registration is a tagged document in the author's repository and was not lodged with an independent registry (@sec-prereg).]
+[Ajai Upadhyaya]{.smallcaps}^[Code, pre-registration, decisions log and every result: [{{< var meta.repo_short >}}]({{< var meta.repo_url >}}). Archived at Zenodo, DOI [{{< var meta.doi >}}](https://doi.org/{{< var meta.doi >}}). The study was carried out with an AI assistant under the author's direction; see the Statements. The pre-registration is a tagged document in the author's repository and was not lodged with an independent registry (@sec-prereg).]
 
 ```{=latex}
 \vspace{0.3em}{\small Virginia Commonwealth University}\par
@@ -25,7 +25,7 @@ keywords: [expectations formation, overreaction, Bayesian learning, limited memo
 \vspace{0.8em}
 ```
 
-This version: {{< var meta.date >}}
+{{< var meta.date >}}
 
 ```{=latex}
 \end{center}

@@ -2,7 +2,7 @@ key,source,locator,fmt
 meta.date,analysis/paper_build.py,PAPER_DATE,date
 meta.repo_url,docs/DECISIONS.md,entry: repository made public,text
 meta.repo_short,docs/DECISIONS.md,entry: repository made public,text
-meta.doi,analysis/paper_build.py,DOI (reserved),text
+meta.doi,analysis/paper_build.py,Zenodo concept DOI (all versions),text
 meta.licence.code,LICENSE,title,text
 meta.licence.text,analysis/paper_build.py,"licence of text, results and figures",text
 meta.public_date,docs/DECISIONS.md,entry: repository made public,date
