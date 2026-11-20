@@ -30,6 +30,7 @@ A note on one date. The log says its dates are UTC, and it dates the entry "Surv
 | 15 | 2026-11-20 | timing of deviations v1.2 to v1.4, resumed runs (final review) | record | after; the entry fixes the timing of `prereg-v1.2` to `prereg-v1.4` |
 | 16 | 2026-11-20 | repository made public | record | after |
 | 17 | 2026-11-20 | cost accounting corrected (pilot), at the paper's fact-check | record | after; corrects the cost statement of the spend entry |
+| 18 | 2026-11-20 | paper posted (Zenodo published, SSRN submitted) | record | after |
 
 ```{=latex}
 \endgroup
@@ -469,6 +470,15 @@ pilot was billed separately, total cloud spend is about \$15.06. So spend is \$1
 \$15.06, at or just over the \$15 pre-registered cloud cap (not "within" it), and within the
 owner's \$20 hard limit either way. The figures are estimates from instance time, not yet
 reconciled against the provider's bill. The paper and the report edition state the range.
+
+### 2026-11-20: paper posted (Zenodo published, SSRN submitted) {.unnumbered .unlisted}
+
+The academic paper (docs/paper/_output/paper.pdf, commit 2a78e5c, md5
+e9e7c3bc65e3b0be3b6ad4bcb9ee7ef6) was published on Zenodo as record 24387529, DOI
+10.5281/zenodo.24387529 (concept DOI 10.5281/zenodo.24387528), CC BY 4.0, with the owner's
+approval, and submitted to SSRN as abstract 7733526 (preprint, CC BY), now in SSRN's review.
+arXiv submission 8401422 is open and waits for an endorsement in cs.LG. The posted PDF says
+the DOI is "reserved"; that was true when it was built and the file cannot change on Zenodo.
 
 ```{=latex}
 \endgroup

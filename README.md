@@ -13,8 +13,12 @@ margins and decision rules were frozen in a pre-registration before any confirma
 | H2: with memory cut to W = 2, 4, 8, 16, the largest model is equivalent to window-Bayes | equivalent at every window, 12 of 12 each |
 | H3: overreaction beyond window-Bayes at ρ = 0.6 and 0.8 | not supported, 0 of 8 combinations |
 
-The report is `paper/the-rational-transformer/the-rational-transformer.pdf`. Every number in
-it comes from `RESULTS.md`.
+**Paper:** *The Rational Transformer: What a Network Trained to Forecast Gets Wrong, and Whether It
+Is Bias or Missing Information* (`docs/paper/`, rendered `docs/paper/_output/paper.pdf`).
+Zenodo: [doi:10.5281/zenodo.24387529](https://doi.org/10.5281/zenodo.24387529) ·
+SSRN: [abstract 7733526](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=7733526) (under review).
+Every number in it is generated from the results files by `analysis/paper_build.py`. A shorter
+report-series edition for the author's site is in `paper/the-rational-transformer/`.
 
 ## Where things are
 

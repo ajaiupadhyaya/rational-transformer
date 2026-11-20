@@ -1461,6 +1461,7 @@ RESULTS_SEEN = {
     "timing of deviations v1.2 to v1.4, resumed runs (final review)": ("record", "after; the entry fixes the timing of `prereg-v1.2` to `prereg-v1.4`"),
     "repository made public": ("record", "after"),
     "cost accounting corrected (pilot), at the paper's fact-check": ("record", "after; corrects the cost statement of the spend entry"),
+    "paper posted (Zenodo published, SSRN submitted)": ("record", "after"),
 }
 
 

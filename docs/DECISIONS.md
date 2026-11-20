@@ -403,3 +403,12 @@ pilot was billed separately, total cloud spend is about $15.06. So spend is $14.
 $15.06, at or just over the $15 pre-registered cloud cap (not "within" it), and within the
 owner's $20 hard limit either way. The figures are estimates from instance time, not yet
 reconciled against the provider's bill. The paper and the report edition state the range.
+
+## 2026-11-20: paper posted (Zenodo published, SSRN submitted)
+
+The academic paper (docs/paper/_output/paper.pdf, commit 2a78e5c, md5
+e9e7c3bc65e3b0be3b6ad4bcb9ee7ef6) was published on Zenodo as record 24387529, DOI
+10.5281/zenodo.24387529 (concept DOI 10.5281/zenodo.24387528), CC BY 4.0, with the owner's
+approval, and submitted to SSRN as abstract 7733526 (preprint, CC BY), now in SSRN's review.
+arXiv submission 8401422 is open and waits for an endorsement in cs.LG. The posted PDF says
+the DOI is "reserved"; that was true when it was built and the file cannot change on Zenodo.

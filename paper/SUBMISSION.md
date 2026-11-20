@@ -1,5 +1,7 @@
 # Submission package: arXiv and SSRN
 
+**Status (2026-11-20):** Zenodo published, record 24387529, DOI 10.5281/zenodo.24387529. SSRN submitted, abstract 7733526, under review. arXiv submission 8401422 is open and waits for a cs.LG endorsement.
+
 Everything below is ready to paste. Posting is the author's action. Do not post until the
 preconditions are met.
 
