@@ -1462,6 +1462,7 @@ RESULTS_SEEN = {
     "repository made public": ("record", "after"),
     "cost accounting corrected (pilot), at the paper's fact-check": ("record", "after; corrects the cost statement of the spend entry"),
     "paper posted (Zenodo published, SSRN submitted)": ("record", "after"),
+    "Zenodo version 2 (title page corrected)": ("record", "after"),
 }
 
 

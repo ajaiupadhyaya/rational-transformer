@@ -15,7 +15,7 @@ margins and decision rules were frozen in a pre-registration before any confirma
 
 **Paper:** *The Rational Transformer: What a Network Trained to Forecast Gets Wrong, and Whether It
 Is Bias or Missing Information* (`docs/paper/`, rendered `docs/paper/_output/paper.pdf`).
-Zenodo: [doi:10.5281/zenodo.24387529](https://doi.org/10.5281/zenodo.24387529) ·
+Zenodo: [doi:10.5281/zenodo.24387528](https://doi.org/10.5281/zenodo.24387528) (latest version) ·
 SSRN: [abstract 7733526](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=7733526) (under review).
 Every number in it is generated from the results files by `analysis/paper_build.py`. A shorter
 report-series edition for the author's site is in `paper/the-rational-transformer/`.

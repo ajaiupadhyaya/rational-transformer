@@ -31,6 +31,7 @@ A note on one date. The log says its dates are UTC, and it dates the entry "Surv
 | 16 | 2026-11-20 | repository made public | record | after |
 | 17 | 2026-11-20 | cost accounting corrected (pilot), at the paper's fact-check | record | after; corrects the cost statement of the spend entry |
 | 18 | 2026-11-20 | paper posted (Zenodo published, SSRN submitted) | record | after |
+| 19 | 2026-11-20 | Zenodo version 2 (title page corrected) | record | after |
 
 ```{=latex}
 \endgroup
@@ -479,6 +480,16 @@ e9e7c3bc65e3b0be3b6ad4bcb9ee7ef6) was published on Zenodo as record 24387529, DO
 approval, and submitted to SSRN as abstract 7733526 (preprint, CC BY), now in SSRN's review.
 arXiv submission 8401422 is open and waits for an endorsement in cs.LG. The posted PDF says
 the DOI is "reserved"; that was true when it was built and the file cannot change on Zenodo.
+
+### 2026-11-20: Zenodo version 2 (title page corrected) {.unnumbered .unlisted}
+
+At the owner's request the title page was changed to the standard academic form (no
+"Working paper" label, no "This version" line) and the paper now cites the Zenodo concept
+DOI 10.5281/zenodo.24387528, which resolves to the latest version. No result, number or text
+of the analysis changed. Published as Zenodo version 2, record 24400796, DOI
+10.5281/zenodo.24400796 (paper.pdf md5 f02726235997899521dc5ced6ebe6946, commit 032b9d3);
+version 1 (24387529) stays as history. SSRN 7733526 still holds the first file; it is to be
+replaced through Revise once SSRN approves the submission.
 
 ```{=latex}
 \endgroup
