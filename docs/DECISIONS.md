@@ -386,3 +386,9 @@ Checkpoints of A-l-w8-s0 to s4 and A-l-w4-s4, and steps 3,000 and 10,000 of A-l-
 lost with a cloud instance; their evaluation CSVs had been copied and are complete.
 Cloud evaluation used TF32: re-evaluating two cloud cells in fp32 moves excess error by up to
 0.04 points and the gap by up to 2e-4, far inside the margins; Mac cells reproduce to 1e-6.
+
+## 2026-11-20: repository made public
+
+Owner approved. Created https://github.com/ajaiupadhyaya/rational-transformer (public) at 04:54 UTC and pushed `main` (8c30667) and tags
+`prereg-v1` to `prereg-v1.4` unchanged. The tags existed only locally until then, so they are the
+author's record, not an independent timestamp; the paper says so.

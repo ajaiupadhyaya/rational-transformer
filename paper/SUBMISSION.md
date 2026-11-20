@@ -5,9 +5,8 @@ preconditions are met.
 
 ## Preconditions
 
-- [ ] Repository public with the `prereg-v1` to `prereg-v1.4` tags pushed. Replace
-      `[REPOSITORY URL]` in section 05 of `paper/the-rational-transformer/index.html` and
-      rebuild with `paper/render.sh`.
+- [x] Repository public with the `prereg-v1` to `prereg-v1.4` tags pushed (20 November 2026):
+      https://github.com/ajaiupadhyaya/rational-transformer. The URL is in section 05 of the paper.
 - [ ] Cover placeholders set: "Report · Esn-00XX" and "No. XX".
 - [ ] Cloud spend confirmed in the Thunder Compute console. If it differs from about $14.35,
       update the summary card and the Cost bullet in section 10.
@@ -51,7 +50,7 @@ reached the information-limited Bayesian forecast, with no residual in the human
 - **Primary category:** cs.LG
 - **Cross-lists:** econ.EM (econometrics), stat.ML
 - **Comments field:** 14 pages, 4 figures. Pre-registered (tags prereg-v1 to v1.4). Code, data
-  and every verdict with its seed values: [REPOSITORY URL]
+  and every verdict with its seed values: https://github.com/ajaiupadhyaya/rational-transformer
 - **Licence:** CC BY 4.0 lets anyone reuse the work with credit. The arXiv default licence is
   the more restrictive option.
 - **Format:** PDF-only upload is accepted for PDFs not produced from TeX. This one is built
