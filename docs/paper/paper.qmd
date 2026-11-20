@@ -17,11 +17,11 @@ keywords: [expectations formation, overreaction, Bayesian learning, limited memo
 \vspace{2em}
 ```
 
-<!-- AUTHOR: affiliation (add a line under the name, or to the footnote) -->
-<!-- AUTHOR: contact e-mail (add to the footnote) -->
 [Ajai Upadhyaya]{.smallcaps}^[Code, pre-registration, decisions log and every result: [{{< var meta.repo_short >}}]({{< var meta.repo_url >}}). Archived record: DOI {{< var meta.doi >}} (reserved). The study was carried out with an AI assistant under the author's direction; see the Statements. The pre-registration is a tagged document in the author's repository and was not lodged with an independent registry (@sec-prereg).]
 
 ```{=latex}
+\vspace{0.3em}{\small Virginia Commonwealth University}\par
+\vspace{0.15em}{\small\href{mailto:upadhyayaak2@vcu.edu}{upadhyayaak2@vcu.edu}}\par
 \vspace{0.8em}
 ```
 
