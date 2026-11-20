@@ -6,3 +6,11 @@ results/checkpoints/
 results/eval/
 results/gate/
 results/probe/
+results/gate.stale-*/
+results/cloud/gate/
+results/cloud/pilot/
+results/cloud/sweep_setup/
+results/logs/
+results/*.log
+results/cloud/*.log
+results/cloud/sweep_created_epoch

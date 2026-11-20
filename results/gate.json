@@ -1,0 +1,103 @@
+{
+  "passed": true,
+  "code_hash": "a2682c12ca854c14f26fadd76058fe06e760a12be2df96fd0c00a99568411db3",
+  "checks": {
+    "benchmark": {
+      "passed": true,
+      "families": {
+        "A": {
+          "eor_b_h1": 0.0009628771906284333,
+          "eor_ok": true,
+          "windows": {
+            "2": {
+              "bayes": 1.0143020588090428,
+              "window_bayes": 1.0849773073591842,
+              "bayes_le_window_bayes": true,
+              "ok": true
+            },
+            "4": {
+              "bayes": 1.0143020588090428,
+              "window_bayes": 1.073671510282122,
+              "bayes_le_window_bayes": true,
+              "ok": true
+            },
+            "8": {
+              "bayes": 1.0143020588090428,
+              "window_bayes": 1.058370150037478,
+              "bayes_le_window_bayes": true,
+              "ls": 1.1926010770347302,
+              "window_bayes_le_ls": true,
+              "ok": true
+            },
+            "16": {
+              "bayes": 1.0143020588090428,
+              "window_bayes": 1.0398257740136265,
+              "bayes_le_window_bayes": true,
+              "ls": 1.0745749618362679,
+              "window_bayes_le_ls": true,
+              "ok": true
+            }
+          },
+          "ordering_ok": true,
+          "seconds": 16.950267291162163
+        },
+        "B": {
+          "eor_b_h1": 0.00047872653918982144,
+          "eor_ok": true,
+          "windows": {
+            "2": {
+              "bayes": 1.0325600668456751,
+              "window_bayes": 1.2676570310612767,
+              "bayes_le_window_bayes": true,
+              "ok": true
+            },
+            "4": {
+              "bayes": 1.0325600668456751,
+              "window_bayes": 1.209208611185231,
+              "bayes_le_window_bayes": true,
+              "ok": true
+            },
+            "8": {
+              "bayes": 1.0325600668456751,
+              "window_bayes": 1.1575179615599347,
+              "bayes_le_window_bayes": true,
+              "ls": 1.4762832085127267,
+              "window_bayes_le_ls": true,
+              "ok": true
+            },
+            "16": {
+              "bayes": 1.0325600668456751,
+              "window_bayes": 1.1037541014256784,
+              "bayes_le_window_bayes": true,
+              "ls": 1.176983138861772,
+              "window_bayes_le_ls": true,
+              "ok": true
+            }
+          },
+          "ordering_ok": true,
+          "seconds": 96.88496458297595
+        }
+      },
+      "point_prior_vs_fire_max_abs": 8.881784197001252e-16,
+      "point_prior_ok": true
+    },
+    "planted": {
+      "passed": true,
+      "kappa": {
+        "-0.3": -0.29999999999999993,
+        "0.0": 0.0,
+        "0.2": 0.2,
+        "0.5": 0.5
+      },
+      "gap": 0.1499999999999999,
+      "gap_planted": 0.15,
+      "fire_implied_persistence": 0.40000000000000013
+    },
+    "learning": {
+      "passed": true,
+      "excess_mse_pct": 0.7193573184454571,
+      "cell": "A-s-wfull-s0",
+      "step": 3000
+    }
+  }
+}

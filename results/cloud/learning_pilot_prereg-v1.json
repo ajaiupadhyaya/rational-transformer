@@ -1,0 +1,8 @@
+{
+  "code_hash": "ecb0d185ddaa9415f82f724429b0be294a5eb6c655c5c631955b4473260b760e",
+  "cell": "A-s-wfull-s0",
+  "step": 3000,
+  "excess_mse_pct": 0.7193583043769269,
+  "device": "cuda",
+  "finished_iso": "2026-11-17T17:51:06+00:00"
+}

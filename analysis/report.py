@@ -131,16 +131,20 @@ def fig_gap_map(summary, path):
     d = _sel(summary, family="A", size="l", step=30000, h=1, bench="window_bayes", column="gap")
     d = d[d["rho"] != "prior"].copy()
     d["_x"] = d["rho"].astype(float)
-    fig, axes = plt.subplots(1, 5, figsize=(15, 3.4), sharey=True)
+    fig, grid = plt.subplots(2, 3, figsize=(10, 6.2), sharey=True)
+    axes = grid.ravel()
+    axes[-1].set_visible(False)
     for ax, w in zip(axes, WINDOWS):
         _errbar(ax, None, d[d["window"].astype(str) == w], "tab:blue", None)
         for y in (0.02, -0.02):
             ax.axhline(y, color="k", ls="--", lw=0.8)
         ax.axhline(0, color="gray", lw=0.6)
-        ax.text(0.04, 0.95, f"window {w}", transform=ax.transAxes, va="top", fontsize=9)
-        ax.set_xlabel("true persistence rho")
+        ax.text(0.04, 0.95, "full memory" if w == "full" else f"W = {w}", transform=ax.transAxes,
+                va="top", fontsize=10)
+        ax.set_xlabel(r"true persistence $\rho$")
         ax.set_xlim(-0.05, 1.05)
-    axes[0].set_ylabel("gap: model minus window-Bayes\nimplied persistence (slope)")
+    for ax in (axes[0], axes[3]):
+        ax.set_ylabel("gap: model minus matching benchmark\n(implied persistence)")
     fig.tight_layout()
     fig.savefig(path, dpi=150)
     plt.close(fig)
@@ -148,11 +152,11 @@ def fig_gap_map(summary, path):
 
 def fig_human_overlay(summary, path, human):
     fig, ax = plt.subplots(figsize=(5.4, 5))
-    ax.plot([0, 1], [0, 1], color="gray", lw=0.8, ls=":", label="45-degree line")
+    ax.plot([0, 1], [0, 1], color="gray", lw=0.8, ls=":", label="truth (45-degree line)")
     base = dict(family="B", size="l", step=30000, h=1, column="gap")
     d = lambda w, b: _sel(summary, window=w, bench=b, **base).query("rho != 'prior'") \
         .assign(_x=lambda t: t["rho"].astype(float)).sort_values("_x")
-    for w, b, col, lab in (("full", "bayes", "tab:blue", "model, full window"),
+    for w, b, col, lab in (("full", "bayes", "tab:blue", "model, full memory"),
                            ("4", "window_bayes", "tab:orange", "model, W = 4")):
         r = d(w, b)
         if len(r):
@@ -167,8 +171,8 @@ def fig_human_overlay(summary, path, human):
                 label="window-Bayes, W = 4 (Family B)")
     ax.errorbar(human["rho"], human["implied_rho"], yerr=1.96 * human["implied_rho_se"],
                 fmt="s", color="tab:red", capsize=3, ms=4, label="human subjects (AKLMT), 95%")
-    ax.set_xlabel("true persistence rho")
-    ax.set_ylabel("implied persistence (slope of forecast on x_t)")
+    ax.set_xlabel(r"true persistence $\rho$")
+    ax.set_ylabel(r"implied persistence (slope of forecast on $x_t$)")
     ax.legend(fontsize=7, loc="lower right")
     fig.tight_layout()
     fig.savefig(path, dpi=150)
@@ -179,19 +183,21 @@ def _by_window_panels(summary, path, xkey, xs, xlabel, sizes_over=False, logx=Fa
     fig, axes = plt.subplots(1, 2, figsize=(9, 3.6), sharey=True)
     cols = _palette(len(WINDOWS))
     for ax, rho in zip(axes, H3_RHOS):
-        for w, col in zip(WINDOWS, cols):
+        for i, (w, col) in enumerate(zip(WINDOWS, cols)):
+            off = i - (len(WINDOWS) - 1) / 2
             kw = dict(family="A", h=1, bench="window_bayes", column="gap", rho=rho, window=w)
             if sizes_over:
                 d = _sel(summary, step=30000, **kw)
-                d = d[d["size"].isin(xs)].assign(_x=lambda t: t["size"].map({s: i for i, s in enumerate(xs)}))
+                d = d[d["size"].isin(xs)].assign(
+                    _x=lambda t: t["size"].map({s: k for k, s in enumerate(xs)}).astype(float) + 0.05 * off)
             else:
                 d = _sel(summary, size="l", **kw)
-                d = d[d["step"].isin(xs)].assign(_x=lambda t: t["step"].astype(float))
-            _errbar(ax, None, d, col, f"window {w}", dx=0.0)
+                d = d[d["step"].isin(xs)].assign(_x=lambda t: t["step"].astype(float) * 1.06 ** off)
+            _errbar(ax, None, d, col, "full memory" if w == "full" else f"W = {w}", dx=0.0)
         for y in (0.02, -0.02):
             ax.axhline(y, color="k", ls="--", lw=0.8)
         ax.axhline(0, color="gray", lw=0.6)
-        ax.text(0.04, 0.95, f"rho = {rho}", transform=ax.transAxes, va="top", fontsize=9)
+        ax.text(0.04, 0.95, rf"$\rho$ = {rho}", transform=ax.transAxes, va="top", fontsize=9)
         ax.set_xlabel(xlabel)
         if sizes_over:
             ax.set_xticks(range(len(xs)), xs)
@@ -199,7 +205,7 @@ def _by_window_panels(summary, path, xkey, xs, xlabel, sizes_over=False, logx=Fa
             ax.set_xscale("log")
             ax.set_xticks(xs, [str(s) for s in xs])
             ax.minorticks_off()
-    axes[0].set_ylabel("gap: model minus window-Bayes\nimplied persistence (slope)")
+    axes[0].set_ylabel("gap: model minus matching benchmark\n(implied persistence)")
     axes[1].legend(fontsize=7, loc="best")
     fig.tight_layout()
     fig.savefig(path, dpi=150)
@@ -549,7 +555,10 @@ def run(metrics_dir, out_dir=ROOT, *, metrics_60k_dir=None, eval_dir=None, cfg=N
     H = json.loads((out / "results" / "hypotheses.json").read_text())
 
     make_figures(summary, human, out / "figures")
-    label = str(metrics_dir)
+    try:
+        label = str(Path(metrics_dir).resolve().relative_to(ROOT))
+    except ValueError:
+        label = Path(metrics_dir).name
     (out / "RESULTS.md").write_text(render(summary, H, label))
     return H
 
